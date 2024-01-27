@@ -23,7 +23,7 @@ public class Main {
             initDb();
         } else {
             try {
-                new CustomJFileChooser(null).showCreateOrOpen();
+                new CustomJFileChooser(null, CustomJFileChooser.CREATE_OR_OPEN).showChooser();
                 initDb();
                 Gui.getInstance().setDbLabel(Settings.DB_FILE_PATH);
             } catch (IOException e) {

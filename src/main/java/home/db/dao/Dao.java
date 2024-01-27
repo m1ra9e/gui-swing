@@ -16,4 +16,6 @@ public interface Dao {
     void update(AbstractVehicle dataObj) throws SQLException;
 
     void delete(Long[] ids) throws SQLException;
+
+    void saveAllChanges() throws SQLException;
 }

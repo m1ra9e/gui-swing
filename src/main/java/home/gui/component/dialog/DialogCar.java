@@ -12,8 +12,8 @@ public class DialogCar extends AbstractDialogTrailer {
 
     private JCheckBox chkPassengers;
 
-    public DialogCar(int width, int height, AbstractVehicle dataObj) {
-        super(VehicleType.CAR.name(), width, height, dataObj);
+    public DialogCar(int width, int height, AbstractVehicle dataObj, int tblRowOfSelectedDataObj) {
+        super(VehicleType.CAR.name(), width, height, dataObj, tblRowOfSelectedDataObj);
     }
 
     @Override
