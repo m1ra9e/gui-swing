@@ -3,7 +3,6 @@ package home.gui;
 import java.lang.reflect.Constructor;
 
 import javax.swing.JFrame;
-import javax.swing.JOptionPane;
 
 import org.apache.log4j.Logger;
 
@@ -13,6 +12,7 @@ import home.gui.component.dialog.DialogMotorcycle;
 import home.gui.component.dialog.DialogTruck;
 import home.models.AbstractVehicle;
 import home.models.VehicleType;
+import home.utils.Utils;
 
 public class DialogCaller {
 
@@ -30,11 +30,9 @@ public class DialogCaller {
             T dialog = constructor.newInstance(OBJ_DIALOG_WIDTH, OBJ_DIALOG_HEIGHT, dataObj);
             dialog.setVisible(true);
         } catch (Exception e) {
-            LOG.error("Exception: ", e);
-            JOptionPane.showMessageDialog(frame,
+            Utils.logAndShowError(LOG, frame,
                     "Dialog window creation error.\n" + e.getLocalizedMessage(),
-                    "Dialog error",
-                    JOptionPane.ERROR_MESSAGE);
+                    "Dialog error", e);
             return;
         }
     }
@@ -63,10 +61,9 @@ public class DialogCaller {
             break;
 
         default:
-            JOptionPane.showMessageDialog(frame,
+            Utils.logAndShowError(LOG, frame,
                     "There is no dialog for [" + objType + "] object type",
-                    "Object type error",
-                    JOptionPane.ERROR_MESSAGE);
+                    "Object type error", new IllegalArgumentException("DataObj type error"));
             return;
         }
         showObjDialog(frame, dialogClass, dataObj);

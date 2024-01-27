@@ -5,8 +5,6 @@ import java.sql.SQLException;
 import java.util.Date;
 import java.util.function.Predicate;
 
-import javax.swing.JOptionPane;
-
 import org.apache.log4j.Logger;
 
 import home.Storage;
@@ -137,7 +135,7 @@ public abstract class AbstractDialog extends CustomJDialog {
                 DaoSQLite.getInstance().create(dataObj);
             }
         } catch (SQLException e) {
-            logAndShowError("Error while save to db.", "Save error", e);
+            Utils.logAndShowError(LOG, this, "Error while save to db.", "Save error", e);
         }
     }
 
@@ -146,14 +144,9 @@ public abstract class AbstractDialog extends CustomJDialog {
             try {
                 Storage.getInstance().refresh(DaoSQLite.getInstance().readAll());
             } catch (SQLException e) {
-                logAndShowError("Error while refresh GUI table.", "Refresh error", e);
+                Utils.logAndShowError(LOG, this, "Error while refresh GUI table.",
+                        "Refresh error", e);
             }
         });
-    }
-
-    private void logAndShowError(String msg, String title, Exception e) {
-        LOG.error(msg, e);
-        JOptionPane.showMessageDialog(this, msg + "\n" + e.getLocalizedMessage(),
-                title, JOptionPane.ERROR_MESSAGE);
     }
 }

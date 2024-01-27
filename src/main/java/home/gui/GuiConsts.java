@@ -24,4 +24,20 @@ public interface GuiConsts {
     String TRANSPORTS_PASSENGERS = "transports passengers";
     String TRANSPORTS_CARGO = "transports cargo";
     String HAS_CRADLE = "has cradle";
+
+    // Menu names
+    String FILE = "File";
+    String CREATE_OR_OPEN = "Create or Open";
+    String STYLE = "Style";
+    String DEFAULT = "Default";
+    String SYSTEM = "System";
+    String HELP = "Help";
+    String ABOUT = "About";
+
+    // About dialog text
+    String ABOUT_TITLE = "About";
+    String ABOUT_TEXT = "Test application.";
+
+    // DB label
+    String CHOOSE_DB_FILE = "Choose SQLite DB file via [File] -> [Open]";
 }
