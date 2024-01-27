@@ -12,8 +12,8 @@ public class DialogMotorcycle extends AbstractDialog {
 
     private JCheckBox chkCradle;
 
-    public DialogMotorcycle(int width, int height, AbstractVehicle dataObj) {
-        super(VehicleType.MOTORCYCLE.name(), width, height, dataObj);
+    public DialogMotorcycle(int width, int height, AbstractVehicle dataObj, int tblRowOfSelectedDataObj) {
+        super(VehicleType.MOTORCYCLE.name(), width, height, dataObj, tblRowOfSelectedDataObj);
     }
 
     @Override

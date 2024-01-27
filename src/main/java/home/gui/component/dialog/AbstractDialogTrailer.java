@@ -12,8 +12,8 @@ public abstract class AbstractDialogTrailer extends AbstractDialog {
     private JCheckBox chkHasTrailer;
 
     public AbstractDialogTrailer(String title, int width, int height,
-            AbstractVehicle dataObj) {
-        super(title, width, height, dataObj);
+            AbstractVehicle dataObj, int tblRowOfSelectedDataObj) {
+        super(title, width, height, dataObj, tblRowOfSelectedDataObj);
     }
 
     @Override

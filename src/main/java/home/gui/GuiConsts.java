@@ -18,7 +18,7 @@ public interface GuiConsts {
     String TRUCK = "Truck";
     String MOTORCYCLE = "Motorcycle";
     String DELETE = "Delete";
-    String SAVE = "Save";
+    String OK = "Ok";
     String CANCEL = "Cancel";
     String HAS_TRAILER = "has trailer";
     String TRANSPORTS_PASSENGERS = "transports passengers";
@@ -28,6 +28,7 @@ public interface GuiConsts {
     // Menu names
     String FILE = "File";
     String CREATE_OR_OPEN = "Create or Open";
+    String SAVE = "Save";
     String STYLE = "Style";
     String DEFAULT = "Default";
     String SYSTEM = "System";

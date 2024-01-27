@@ -8,7 +8,9 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.List;
 import java.util.Locale;
+import java.util.stream.Collectors;
 
 import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JLabel;
@@ -37,6 +39,7 @@ import home.gui.component.CustomJTable;
 import home.gui.component.dialog.DialogCar;
 import home.gui.component.dialog.DialogMotorcycle;
 import home.gui.component.dialog.DialogTruck;
+import home.models.AbstractVehicle;
 import home.utils.Utils;
 
 public class Gui {
@@ -118,8 +121,9 @@ public class Gui {
             public void mousePressed(MouseEvent mouseEvent) {
                 JTable table = (JTable) mouseEvent.getSource();
                 if (CLICK_COUNT == mouseEvent.getClickCount()) {
+                    int selectedTableRow = table.getSelectedRow();
                     DialogCaller.showObjDialog(frame,
-                            Storage.getInstance().get(table.getSelectedRow()));
+                            Storage.getInstance().get(selectedTableRow), selectedTableRow);
                 }
             }
         });
@@ -145,19 +149,13 @@ public class Gui {
         btnDelete = new CustomJButton(GuiConsts.DELETE);
         btnDelete.addActionListener(actionEvent -> {
             Utils.runInThread(() -> {
-                try {
-                    Long[] idsMarkedForDelete = Storage.getInstance().getAll().stream()
-                            .filter(dataObj -> dataObj.isMarkedForDelete())
-                            .map(dataObj -> Long.valueOf(dataObj.getId()))
-                            .toArray(Long[]::new);
-                    if (idsMarkedForDelete.length > 0) {
-                        DaoSQLite.getInstance().delete(idsMarkedForDelete);
-                        Storage.getInstance().refresh(DaoSQLite.getInstance().readAll());
-                    }
-                } catch (SQLException e) {
-                    Utils.logAndShowError(LOG, frame,
-                            "Error while delete:\n" + e.getLocalizedMessage(),
-                            "Deletion error", e);
+                List<AbstractVehicle> obsMarkedForDelete = Storage.getInstance()
+                        .getAll().stream()
+                        .filter(dataObj -> dataObj.isMarkedForDelete())
+                        .collect(Collectors.toList());
+                if (!obsMarkedForDelete.isEmpty()) {
+                    Storage.getInstance().deleteObjects(obsMarkedForDelete);
+                    Gui.getInstance().refreshTable();
                 }
             });
         });
@@ -178,8 +176,11 @@ public class Gui {
     private void createMenu() {
         var createOfOpenItem = new JMenuItem(GuiConsts.CREATE_OR_OPEN);
         createOfOpenItem.addActionListener(new CreateOrOpenActionListener(frame, dbLabel));
+        var saveItem = new JMenuItem(GuiConsts.SAVE);
+        saveItem.addActionListener(new SaveActionListener(frame));
         var fileMenu = new JMenu(GuiConsts.FILE);
         fileMenu.add(createOfOpenItem);
+        fileMenu.add(saveItem);
 
         var defaultItem = new JCheckBoxMenuItem(GuiConsts.DEFAULT);
         defaultItem.setSelected(Settings.STYLE.equalsIgnoreCase(GuiConsts.DEFAULT));
@@ -252,10 +253,40 @@ public class Gui {
         public void actionPerformed(ActionEvent event) {
             Utils.runInThread(() -> {
                 try {
-                    new CustomJFileChooser(parent).showCreateOrOpen();
+                    new CustomJFileChooser(parent, CustomJFileChooser.CREATE_OR_OPEN).showChooser();
                     DbInitializer.createTableIfNotExists();
                     Storage.getInstance().refresh(DaoSQLite.getInstance().readAll());
                     dbLabel.setText(Settings.DB_FILE_PATH);
+                } catch (IOException e) {
+                    Utils.logAndShowError(LOG, parent, "Error while create/open DB file.",
+                            "Create/Open file error.", e);
+                    System.exit(1);
+                } catch (SQLException e) {
+                    Utils.logAndShowError(LOG, parent,
+                            "Error while read selected DB file.\n" + e.getLocalizedMessage(),
+                            "Read selected DB error", e);
+                    System.exit(1);
+                }
+            });
+        }
+    }
+
+    private static class SaveActionListener implements ActionListener {
+
+        private final Component parent;
+
+        public SaveActionListener(Component parent) {
+            this.parent = parent;
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent event) {
+            Utils.runInThread(() -> {
+                try {
+                    new CustomJFileChooser(parent, CustomJFileChooser.SAVE).showChooser();
+                    DbInitializer.createTableIfNotExists();
+                    DaoSQLite.getInstance().saveAllChanges();
+                    Storage.getInstance().refresh(DaoSQLite.getInstance().readAll());
                 } catch (IOException e) {
                     Utils.logAndShowError(LOG, parent, "Error while create/open DB file.",
                             "Create/Open file error.", e);
