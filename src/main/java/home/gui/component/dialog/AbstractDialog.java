@@ -1,14 +1,13 @@
 package home.gui.component.dialog;
 
 import java.awt.BorderLayout;
-import java.sql.SQLException;
 import java.util.Date;
 import java.util.function.Predicate;
 
 import org.apache.log4j.Logger;
 
 import home.Storage;
-import home.db.dao.DaoSQLite;
+import home.gui.Gui;
 import home.gui.GuiConsts;
 import home.gui.component.CustomJButton;
 import home.gui.component.CustomJDialog;
@@ -18,7 +17,6 @@ import home.gui.component.CustomJPanel.PanelType;
 import home.gui.component.CustomJTextField;
 import home.gui.component.CustomJXDatePicker;
 import home.models.AbstractVehicle;
-import home.utils.Utils;
 
 @SuppressWarnings("serial")
 public abstract class AbstractDialog extends CustomJDialog {
@@ -26,6 +24,10 @@ public abstract class AbstractDialog extends CustomJDialog {
     private static final Logger LOG = Logger.getLogger(AbstractDialog.class);
 
     private static final int TEXT_FIELD_COLUMN_NUMBERS = 9;
+
+    protected AbstractVehicle dataObj;
+    protected boolean isNewDataObj;
+    protected int tblRowOfSelectedDataObj;
 
     private CustomJLabel lblColor;
     private CustomJLabel lblNumber;
@@ -41,11 +43,10 @@ public abstract class AbstractDialog extends CustomJDialog {
     protected CustomJPanel panelTextFields;
     private CustomJPanel panelButtons;
 
-    protected AbstractVehicle dataObj;
-    protected boolean isNewDataObj;
-
-    public AbstractDialog(String title, int width, int height, AbstractVehicle dataObj) {
+    public AbstractDialog(String title, int width, int height,
+            AbstractVehicle dataObj, int tblRowOfSelectedDataObj) {
         super(title, width, height);
+        this.tblRowOfSelectedDataObj = tblRowOfSelectedDataObj;
         if (dataObj != null) {
             this.dataObj = dataObj;
             isNewDataObj = false;
@@ -77,12 +78,12 @@ public abstract class AbstractDialog extends CustomJDialog {
     }
 
     private void createButtons() {
-        btnSave = new CustomJButton(GuiConsts.SAVE);
+        btnSave = new CustomJButton(GuiConsts.OK);
         btnSave.addActionListener(actionEvent -> {
             fillDataObj();
             if (checkObjFilling()) {
-                saveToDb();
-                refreshGuiTbl();
+                Storage.getInstance().updateStorage(dataObj, tblRowOfSelectedDataObj);
+                Gui.getInstance().refreshTable();
                 dispose();
             }
         });
@@ -123,30 +124,5 @@ public abstract class AbstractDialog extends CustomJDialog {
         Predicate<String> isFilled = str -> str != null && !str.isBlank();
         return isFilled.test(dataObj.getColor())
                 && isFilled.test(dataObj.getNumber());
-    }
-
-    private void saveToDb() {
-        try {
-            long id = dataObj.getId();
-            if (id != 0) {
-                dataObj.setId(id);
-                DaoSQLite.getInstance().update(dataObj);
-            } else {
-                DaoSQLite.getInstance().create(dataObj);
-            }
-        } catch (SQLException e) {
-            Utils.logAndShowError(LOG, this, "Error while save to db.", "Save error", e);
-        }
-    }
-
-    private void refreshGuiTbl() {
-        Utils.runInThread(() -> {
-            try {
-                Storage.getInstance().refresh(DaoSQLite.getInstance().readAll());
-            } catch (SQLException e) {
-                Utils.logAndShowError(LOG, this, "Error while refresh GUI table.",
-                        "Refresh error", e);
-            }
-        });
     }
 }

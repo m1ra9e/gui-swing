@@ -5,6 +5,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 
+import home.Storage;
 import home.db.Connector;
 import home.db.DbConsts;
 import home.models.AbstractVehicle;
@@ -214,6 +215,23 @@ public class DaoSQLite implements Dao {
             }
         } finally {
             Connector.closeConnection();
+        }
+    }
+
+    @Override
+    public void saveAllChanges() throws SQLException {
+        Long[] idsForDel = Storage.getInstance().getIdsForDelete();
+        if (idsForDel.length > 0) {
+            delete(Storage.getInstance().getIdsForDelete());
+        }
+
+        for (AbstractVehicle dataObj : Storage.getInstance().getAll()) {
+            long id = dataObj.getId();
+            if (id > 0) {
+                update(dataObj);
+            } else {
+                create(dataObj);
+            }
         }
     }
 }
