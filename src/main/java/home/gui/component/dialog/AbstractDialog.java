@@ -4,11 +4,17 @@ import java.awt.BorderLayout;
 import java.util.Date;
 import java.util.function.Predicate;
 
-import org.apache.log4j.Logger;
+import javax.swing.JButton;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JTextField;
+import javax.swing.SwingUtilities;
+
+import org.jdesktop.swingx.JXDatePicker;
 
 import home.Storage;
 import home.gui.Gui;
-import home.gui.GuiConsts;
+import home.gui.IGuiConsts;
 import home.gui.component.CustomJButton;
 import home.gui.component.CustomJDialog;
 import home.gui.component.CustomJLabel;
@@ -21,39 +27,45 @@ import home.models.AbstractVehicle;
 @SuppressWarnings("serial")
 public abstract class AbstractDialog extends CustomJDialog {
 
-    private static final Logger LOG = Logger.getLogger(AbstractDialog.class);
-
     private static final int TEXT_FIELD_COLUMN_NUMBERS = 9;
 
     protected AbstractVehicle dataObj;
     protected boolean isNewDataObj;
     protected int tblRowOfSelectedDataObj;
 
-    private CustomJLabel lblColor;
-    private CustomJLabel lblNumber;
-    private CustomJLabel lblDate;
+    private JLabel lblColor;
+    private JLabel lblNumber;
+    private JLabel lblDate;
 
-    private CustomJTextField tfColor;
-    private CustomJTextField tfNumber;
-    private CustomJXDatePicker tfDate;
+    private JTextField tfColor;
+    private JTextField tfNumber;
+    private JXDatePicker tfDate;
 
-    private CustomJButton btnSave;
-    private CustomJButton btnCancel;
+    private JButton btnSave;
+    private JButton btnCancel;
 
-    protected CustomJPanel panelTextFields;
-    private CustomJPanel panelButtons;
+    protected JPanel panelTextFields;
+    private JPanel panelButtons;
 
     public AbstractDialog(String title, int width, int height,
             AbstractVehicle dataObj, int tblRowOfSelectedDataObj) {
         super(title, width, height);
         this.tblRowOfSelectedDataObj = tblRowOfSelectedDataObj;
-        if (dataObj != null) {
+        if (dataObj == null) {
+            isNewDataObj = true;
+        } else {
             this.dataObj = dataObj;
             isNewDataObj = false;
-        } else {
-            createDataObj();
-            isNewDataObj = true;
         }
+    }
+
+    public void buildDialog() {
+        init();
+
+        if (isNewDataObj) {
+            createDataObj();
+        }
+
         createDataComponents();
         createButtons();
         createPanels();
@@ -61,14 +73,14 @@ public abstract class AbstractDialog extends CustomJDialog {
     }
 
     protected void createDataComponents() {
-        lblColor = new CustomJLabel(GuiConsts.COLOR);
-        lblNumber = new CustomJLabel(GuiConsts.NUMBER);
-        lblDate = new CustomJLabel(GuiConsts.DATE);
+        lblColor = CustomJLabel.create(IGuiConsts.COLOR);
+        lblNumber = CustomJLabel.create(IGuiConsts.NUMBER);
+        lblDate = CustomJLabel.create(IGuiConsts.DATE);
 
-        tfColor = new CustomJTextField(TEXT_FIELD_COLUMN_NUMBERS);
-        tfNumber = new CustomJTextField(TEXT_FIELD_COLUMN_NUMBERS);
+        tfColor = CustomJTextField.create(TEXT_FIELD_COLUMN_NUMBERS);
+        tfNumber = CustomJTextField.create(TEXT_FIELD_COLUMN_NUMBERS);
 
-        tfDate = new CustomJXDatePicker(new Date());
+        tfDate = CustomJXDatePicker.creat(new Date());
 
         if (!isNewDataObj) {
             tfColor.setText(dataObj.getColor());
@@ -78,24 +90,21 @@ public abstract class AbstractDialog extends CustomJDialog {
     }
 
     private void createButtons() {
-        btnSave = new CustomJButton(GuiConsts.OK);
+        btnSave = CustomJButton.create(IGuiConsts.OK);
         btnSave.addActionListener(actionEvent -> {
             fillDataObj();
             if (checkObjFilling()) {
-                Storage.getInstance().updateStorage(dataObj, tblRowOfSelectedDataObj);
-                Gui.getInstance().refreshTable();
+                Storage.INSTANCE.updateStorage(dataObj, tblRowOfSelectedDataObj);
+                Gui.INSTANCE.refreshTable();
                 dispose();
             }
         });
-        btnCancel = new CustomJButton(GuiConsts.CANCEL);
+        btnCancel = CustomJButton.create(IGuiConsts.CANCEL);
         btnCancel.addActionListener(actionEvent -> dispose());
     }
 
     protected void createPanels() {
-        panelTextFields = new CustomJPanel(PanelType.DIALOG_TEXT_FIELDS_PANEL);
-
-        panelButtons = new CustomJPanel(PanelType.DIALOG_BUTTON_PANEL);
-
+        panelTextFields = CustomJPanel.create(PanelType.DIALOG_TEXT_FIELDS_PANEL);
         panelTextFields.add(lblColor);
         panelTextFields.add(tfColor);
         panelTextFields.add(lblNumber);
@@ -103,6 +112,7 @@ public abstract class AbstractDialog extends CustomJDialog {
         panelTextFields.add(lblDate);
         panelTextFields.add(tfDate);
 
+        panelButtons = CustomJPanel.create(PanelType.DIALOG_BUTTON_PANEL);
         panelButtons.add(btnSave);
         panelButtons.add(btnCancel);
     }
@@ -110,6 +120,20 @@ public abstract class AbstractDialog extends CustomJDialog {
     private void createDialog() {
         getContentPane().add(panelTextFields, BorderLayout.CENTER);
         getContentPane().add(panelButtons, BorderLayout.SOUTH);
+        makeDialogVisible();
+    }
+
+    /**
+     * Creating and displaying a form. When launched via
+     * "SwingUtilities.invokeLater(new Runnable(){...}" the dialog will be created
+     * and displayed after all expected events have been processed, i.e. the dialog
+     * will be created and displayed when all resources are ready. This is
+     * necessary, so that all elements are guaranteed to be displayed in the window
+     * (if you do "setVisible(true)" from the main thread, then there is a chance
+     * that some element will not be displayed in the window).
+     */
+    private void makeDialogVisible() {
+        SwingUtilities.invokeLater(() -> setVisible(true));
     }
 
     protected void fillDataObj() {

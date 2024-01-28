@@ -4,7 +4,8 @@ import java.lang.reflect.Constructor;
 
 import javax.swing.JFrame;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import home.Storage;
 import home.gui.component.dialog.AbstractDialog;
@@ -15,37 +16,15 @@ import home.models.AbstractVehicle;
 import home.models.VehicleType;
 import home.utils.Utils;
 
-public class DialogCaller {
+public final class DialogCaller {
 
-    private static final Logger LOG = Logger.getLogger(DialogCaller.class);
+    private static final Logger LOG = LoggerFactory.getLogger(DialogCaller.class);
 
     private static final int OBJ_DIALOG_WIDTH = 450;
     private static final int OBJ_DIALOG_HEIGHT = 350;
 
-    public static <T extends AbstractDialog> void showObjDialog(JFrame frame,
-            Class<T> dialogClass, AbstractVehicle dataObj, int tblRowOfSelectedDataObj) {
-        Constructor<T> constructor;
-        try {
-            constructor = dialogClass.getConstructor(
-                    new Class[] { int.class, int.class, AbstractVehicle.class, int.class });
-            T dialog = constructor.newInstance(OBJ_DIALOG_WIDTH, OBJ_DIALOG_HEIGHT,
-                    dataObj, tblRowOfSelectedDataObj);
-            dialog.setVisible(true);
-        } catch (Exception e) {
-            Utils.logAndShowError(LOG, frame,
-                    "Dialog window creation error.\n" + e.getLocalizedMessage(),
-                    "Dialog error", e);
-            return;
-        }
-    }
-
-    public static <T extends AbstractDialog> void showObjDialog(JFrame frame,
-            Class<T> dialogClass) {
-        showObjDialog(frame, dialogClass, null, Storage.NO_ROW_IS_SELECTED);
-    }
-
     @SuppressWarnings("unchecked")
-    public static <T extends AbstractDialog> void showObjDialog(JFrame frame,
+    static <T extends AbstractDialog> void showObjDialog(JFrame frame,
             AbstractVehicle dataObj, int tblRowOfSelectedDataObj) {
         Class<T> dialogClass = null;
         VehicleType objType = dataObj.getType();
@@ -69,6 +48,28 @@ public class DialogCaller {
             return;
         }
         showObjDialog(frame, dialogClass, dataObj, tblRowOfSelectedDataObj);
+    }
+
+    static <T extends AbstractDialog> void showObjDialog(JFrame frame,
+            Class<T> dialogClass) {
+        showObjDialog(frame, dialogClass, null, Storage.NO_ROW_IS_SELECTED);
+    }
+
+    private static <T extends AbstractDialog> void showObjDialog(JFrame frame,
+            Class<T> dialogClass, AbstractVehicle dataObj, int tblRowOfSelectedDataObj) {
+        Constructor<T> constructor;
+        try {
+            constructor = dialogClass.getConstructor(
+                    new Class[] { int.class, int.class, AbstractVehicle.class, int.class });
+            T blankDialog = constructor.newInstance(OBJ_DIALOG_WIDTH, OBJ_DIALOG_HEIGHT,
+                    dataObj, tblRowOfSelectedDataObj);
+            blankDialog.buildDialog();
+        } catch (Exception e) {
+            Utils.logAndShowError(LOG, frame,
+                    "Dialog window creation error.\n" + e.getLocalizedMessage(),
+                    "Dialog error", e);
+            return;
+        }
     }
 
     private DialogCaller() {

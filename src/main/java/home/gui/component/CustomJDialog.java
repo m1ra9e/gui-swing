@@ -12,13 +12,23 @@ import javax.swing.KeyStroke;
 import javax.swing.WindowConstants;
 
 @SuppressWarnings("serial")
-public class CustomJDialog extends JDialog {
+public abstract class CustomJDialog extends JDialog {
 
     private static final int GAP_BETWEEN_COMPONENTS = 2;
 
     private static final String CLOSE_DIALOG_ACTION = "closeDialogAction";
 
-    public CustomJDialog(String title, int width, int height) {
+    private final String title;
+    private final int width;
+    private final int height;
+
+    protected CustomJDialog(String title, int width, int height) {
+        this.title = title;
+        this.width = width;
+        this.height = height;
+    }
+
+    protected void init() {
         setTitle(title);
         setSize(width, height);
         setMinimumSize(new Dimension(width, height));
@@ -28,6 +38,7 @@ public class CustomJDialog extends JDialog {
                 GAP_BETWEEN_COMPONENTS));
 
         setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
+
         addHotKeyForClose();
     }
 

@@ -3,9 +3,14 @@ package home.gui.component;
 import javax.swing.JButton;
 
 @SuppressWarnings("serial")
-public class CustomJButton extends JButton {
+public final class CustomJButton extends JButton {
 
-    public CustomJButton(String title) {
-        setText(title);
+    private CustomJButton() {
+    }
+
+    public static CustomJButton create(String title) {
+        var button = new CustomJButton();
+        button.setText(title);
+        return button;
     }
 }

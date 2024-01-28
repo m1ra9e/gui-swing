@@ -19,7 +19,7 @@ import javax.swing.text.DefaultFormatterFactory;
 import org.jdesktop.swingx.JXDatePicker;
 import org.jdesktop.swingx.calendar.SingleDaySelectionModel;
 
-import home.gui.GuiConsts;
+import home.gui.IGuiConsts;
 
 /**
  * This is licensed under LGPL. License can be found here:
@@ -29,17 +29,22 @@ import home.gui.GuiConsts;
  * charlie.hubbard at gmail dot you know what.
  */
 @SuppressWarnings("serial")
-public class CustomJXDatePicker extends JXDatePicker {
+public final class CustomJXDatePicker extends JXDatePicker {
 
     private JSpinner timeSpinner;
     private JPanel timePanel;
     private DateFormat timeFormat;
 
-    public CustomJXDatePicker(Date d) {
-        getMonthView().setSelectionModel(new SingleDaySelectionModel());
-        setFormats(GuiConsts.DATE_FORMAT);
-        setTimeFormat(DateFormat.getTimeInstance(DateFormat.MEDIUM));
-        setDate(d);
+    private CustomJXDatePicker() {
+    }
+
+    public static CustomJXDatePicker creat(Date date) {
+        var datePicker = new CustomJXDatePicker();
+        datePicker.getMonthView().setSelectionModel(new SingleDaySelectionModel());
+        datePicker.setFormats(IGuiConsts.DATE_FORMAT);
+        datePicker.setTimeFormat(DateFormat.getTimeInstance(DateFormat.MEDIUM));
+        datePicker.setDate(date);
+        return datePicker;
     }
 
     @Override

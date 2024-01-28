@@ -1,17 +1,18 @@
-
 package home.db;
 
 import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import home.Settings;
+import home.Settings.Setting;
 
-public class DbInitializer {
+public final class DbInitializer {
 
-    private static final Logger LOG = Logger.getLogger(DbInitializer.class);
+    private static final Logger LOG = LoggerFactory.getLogger(DbInitializer.class);
 
     private static final String CREATE_TBL_QUERY = "CREATE TABLE if not exists vehicle"
             + " ('id' INTEGER PRIMARY KEY AUTOINCREMENT,"
@@ -19,26 +20,25 @@ public class DbInitializer {
             + " 'is_transports_cargo' INTEGER, 'is_transports_passengers' INTEGER,"
             + " 'has_trailer' INTEGER, 'has_cradle' INTEGER, 'date_time' INTEGER);";
 
-    private DbInitializer() {
-    }
-
     public static void createDbFileIfNotExists(File file) throws IOException {
         try {
             if (!file.exists()) {
                 file.createNewFile();
             }
-            Settings.writeSetting(Settings.DB_FILE_PATH_SETTING_NAME, file.getAbsolutePath());
+            Settings.writeSetting(Setting.DB_FILE_PATH, file.getAbsolutePath());
         } catch (IOException e) {
             LOG.error("Error while creating the database file.", e);
-            throw e;
+            throw new IOException("Error while creating the database file.", e);
         }
     }
 
     public static void createTableIfNotExists() throws SQLException {
-        try (var stmt = Connector.getConnection().createStatement()) {
+        try (var conn = Connector.getConnectionToSQLite();
+                var stmt = conn.createStatement()) {
             stmt.execute(CREATE_TBL_QUERY);
-        } finally {
-            Connector.closeConnection();
         }
+    }
+
+    private DbInitializer() {
     }
 }

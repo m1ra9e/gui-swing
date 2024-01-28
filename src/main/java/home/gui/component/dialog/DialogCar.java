@@ -2,13 +2,13 @@ package home.gui.component.dialog;
 
 import javax.swing.JCheckBox;
 
-import home.gui.GuiConsts;
+import home.gui.IGuiConsts;
 import home.models.AbstractVehicle;
 import home.models.Car;
 import home.models.VehicleType;
 
 @SuppressWarnings("serial")
-public class DialogCar extends AbstractDialogTrailer {
+public final class DialogCar extends AbstractDialogTrailer {
 
     private JCheckBox chkPassengers;
 
@@ -19,9 +19,9 @@ public class DialogCar extends AbstractDialogTrailer {
     @Override
     protected void createDataComponents() {
         super.createDataComponents();
-        chkPassengers = new JCheckBox(GuiConsts.TRANSPORTS_PASSENGERS);
+        chkPassengers = new JCheckBox(IGuiConsts.TRANSPORTS_PASSENGERS);
 
-        if (dataObj != null) {
+        if (!isNewDataObj) {
             chkPassengers.setSelected(((Car) dataObj).isTransportsPassengers());
         }
     }

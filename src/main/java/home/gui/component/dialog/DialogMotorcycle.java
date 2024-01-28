@@ -2,13 +2,13 @@ package home.gui.component.dialog;
 
 import javax.swing.JCheckBox;
 
-import home.gui.GuiConsts;
+import home.gui.IGuiConsts;
 import home.models.AbstractVehicle;
 import home.models.Motorcycle;
 import home.models.VehicleType;
 
 @SuppressWarnings("serial")
-public class DialogMotorcycle extends AbstractDialog {
+public final class DialogMotorcycle extends AbstractDialog {
 
     private JCheckBox chkCradle;
 
@@ -19,9 +19,9 @@ public class DialogMotorcycle extends AbstractDialog {
     @Override
     protected void createDataComponents() {
         super.createDataComponents();
-        chkCradle = new JCheckBox(GuiConsts.HAS_CRADLE);
+        chkCradle = new JCheckBox(IGuiConsts.HAS_CRADLE);
 
-        if (dataObj != null) {
+        if (!isNewDataObj) {
             chkCradle.setSelected(((Motorcycle) dataObj).hasCradle());
         }
     }

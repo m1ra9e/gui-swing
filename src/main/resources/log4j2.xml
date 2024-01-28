@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<Configuration status="warn">
+
+    <!-- Logging Properties -->
+    <Properties>
+        <Property name="LOG_PATTERN">%d{yyyy-MM-dd HH:mm:ss} %-5p [%t] %c{1}:%L - %m%n</Property>
+        <Property name="APP_LOG_ROOT">logs</Property>
+    </Properties>
+
+    <Appenders>
+
+        <!-- Console appender -->
+        <Console name="consoleLogger" target="SYSTEM_OUT">
+            <PatternLayout pattern="${LOG_PATTERN}"/>
+        </Console>
+
+        <!-- File appender -->
+        <RollingFile name="fileLogger" 
+            fileName="${APP_LOG_ROOT}/app.log"
+            filePattern="${APP_LOG_ROOT}/app-%d{yyyy-MM-dd}-%i.log">
+            <PatternLayout pattern="${LOG_PATTERN}"/>
+            <Policies>
+                <TimeBasedTriggeringPolicy />
+                <SizeBasedTriggeringPolicy size="10MB" />
+            </Policies>
+            <DefaultRolloverStrategy max="10"/>
+        </RollingFile>
+
+        <Async name="asyncLoggers" bufferSize="500" includeLocation="true">
+            <AppenderRef ref="consoleLogger" />
+            <AppenderRef ref="fileLogger" />
+        </Async>
+        
+    </Appenders>
+
+    <Loggers>
+        <Root level="info">
+            <AppenderRef ref="asyncLoggers" />
+        </Root>
+    </Loggers>
+
+</Configuration>

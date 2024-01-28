@@ -2,16 +2,16 @@ package home.gui.component.dialog;
 
 import javax.swing.JCheckBox;
 
-import home.gui.GuiConsts;
+import home.gui.IGuiConsts;
 import home.models.AbstractVehicle;
 import home.models.AbstractVehicleWithTrailer;
 
 @SuppressWarnings("serial")
-public abstract class AbstractDialogTrailer extends AbstractDialog {
+abstract class AbstractDialogTrailer extends AbstractDialog {
 
     private JCheckBox chkHasTrailer;
 
-    public AbstractDialogTrailer(String title, int width, int height,
+    protected AbstractDialogTrailer(String title, int width, int height,
             AbstractVehicle dataObj, int tblRowOfSelectedDataObj) {
         super(title, width, height, dataObj, tblRowOfSelectedDataObj);
     }
@@ -19,9 +19,9 @@ public abstract class AbstractDialogTrailer extends AbstractDialog {
     @Override
     protected void createDataComponents() {
         super.createDataComponents();
-        chkHasTrailer = new JCheckBox(GuiConsts.HAS_TRAILER);
+        chkHasTrailer = new JCheckBox(IGuiConsts.HAS_TRAILER);
 
-        if (dataObj != null) {
+        if (!isNewDataObj) {
             chkHasTrailer.setSelected(((AbstractVehicleWithTrailer) dataObj).hasTrailer());
         }
     }

@@ -1,8 +1,13 @@
 package home.models;
 
+import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.Objects;
+import java.util.TimeZone;
 
 public abstract class AbstractVehicle {
+
+    private static final char BS = ' ';
 
     private long id;
     private VehicleType type;
@@ -88,5 +93,23 @@ public abstract class AbstractVehicle {
                 && isMarkedForDelete == other.isMarkedForDelete
                 && Objects.equals(number, other.number)
                 && type == other.type;
+    }
+
+    @Override
+    public String toString() {
+        var sb = new StringBuilder();
+        sb.append("Vehicle");
+        if (id != 0) {
+            sb.append(BS).append("[id=").append(id).append(']');
+        }
+        sb.append(BS).append(':').append(BS).append(color).append(BS).append(type)
+                .append(BS).append("with number").append(BS).append(number);
+
+        LocalDateTime time = LocalDateTime.ofInstant(Instant.ofEpochMilli(dateTime),
+                TimeZone.getDefault().toZoneId());
+
+        sb.append(BS).append('(').append(time).append(')');
+
+        return sb.toString();
     }
 }
