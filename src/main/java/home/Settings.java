@@ -5,51 +5,76 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.Locale;
 import java.util.Properties;
 
-import home.utils.Utils;
+import home.gui.ColorSchema;
 
-public class Settings {
+public final class Settings {
 
-    public static String STYLE;
-    public static String DB_FILE_PATH;
+    public enum Setting {
 
-    public static final String STYLE_SETTING_NAME = "style";
-    public static final String DB_FILE_PATH_SETTING_NAME = "db_file_path";
+        STYLE("style", ColorSchema.CROSSPLATFORM.name().toLowerCase(Locale.ROOT)),
+        DB_FILE_PATH("db_file_path", IConsts.EMPTY_STRING);
+
+        private final String name;
+        private final String defaultValue;
+
+        private Setting(String name, String defaultValue) {
+            this.name = name;
+            this.defaultValue = defaultValue;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public String getDefaultValue() {
+            return defaultValue;
+        }
+    }
 
     private static final String SETTINGS_FILE_NAME = "settings.properties";
     private static final Properties SETTINGS = new Properties();
 
-    private Settings() {
+    public static String getStyle() {
+        return get(Setting.STYLE);
+    }
+
+    public static String getDbFilePath() {
+        return get(Setting.DB_FILE_PATH);
     }
 
     public static boolean hasPathToDbFile() {
-        return Settings.DB_FILE_PATH != null && !Settings.DB_FILE_PATH.isBlank();
+        String dbFilePath = get(Setting.DB_FILE_PATH);
+        return dbFilePath != null && !dbFilePath.isBlank();
     }
 
-    public static void writeSetting(String name, String value) throws IOException {
-        SETTINGS.setProperty(name, value);
+    private static String get(Setting setting) {
+        return SETTINGS.getProperty(setting.getName());
+    }
+
+    public static void writeSetting(Setting setting, String value) throws IOException {
+        SETTINGS.setProperty(setting.getName(), value);
         try (OutputStream outputStream = new FileOutputStream(SETTINGS_FILE_NAME)) {
             SETTINGS.store(outputStream, null);
         } catch (IOException e) {
-            throw Utils.getNewException(e, "Error while filling the settings file.");
+            throw new IllegalStateException("Error while filling the settings file: "
+                    + SETTINGS_FILE_NAME, e);
         }
         readSettings();
     }
 
-    public static void readSettings() throws IOException {
+    public static void readSettings() {
         try (var inputStream = new FileInputStream(getSettingsPath())) {
             SETTINGS.load(inputStream);
         } catch (IOException e) {
-            throw Utils.getNewException(e, "Error while reading settings from file: "
-                    + SETTINGS_FILE_NAME);
+            throw new IllegalStateException("Error while reading settings from file: "
+                    + SETTINGS_FILE_NAME, e);
         }
-
-        STYLE = SETTINGS.getProperty(STYLE_SETTING_NAME, Default.STYLE);
-        DB_FILE_PATH = SETTINGS.getProperty(DB_FILE_PATH_SETTING_NAME, Default.DB_FILE_PATH);
     }
 
-    public static String getSettingsPath() throws IOException {
+    private static String getSettingsPath() {
         try {
             File file = new File(SETTINGS_FILE_NAME);
             if (!file.exists()) {
@@ -58,22 +83,22 @@ public class Settings {
             }
             return file.getAbsolutePath();
         } catch (IOException e) {
-            throw Utils.getNewException(e, "Error while creating the settings file.");
+            throw new IllegalStateException("Error while creating the settings file: "
+                    + SETTINGS_FILE_NAME, e);
         }
     }
 
-    private static void fillWithDefaultSettings() throws IOException {
+    private static void fillWithDefaultSettings() {
         try (OutputStream outputStream = new FileOutputStream(SETTINGS_FILE_NAME)) {
-            SETTINGS.setProperty(STYLE_SETTING_NAME, Default.STYLE);
-            SETTINGS.setProperty(DB_FILE_PATH_SETTING_NAME, Default.DB_FILE_PATH);
+            SETTINGS.setProperty(Setting.STYLE.getName(), Setting.STYLE.getDefaultValue());
+            SETTINGS.setProperty(Setting.DB_FILE_PATH.getName(), Setting.DB_FILE_PATH.getDefaultValue());
             SETTINGS.store(outputStream, null);
         } catch (IOException e) {
-            throw Utils.getNewException(e, "Error while filling the settings file.");
+            throw new IllegalStateException("Error while filling the settings file: "
+                    + SETTINGS_FILE_NAME, e);
         }
     }
 
-    private final class Default {
-        private static final String STYLE = "default";
-        private static final String DB_FILE_PATH = "";
+    private Settings() {
     }
 }

@@ -1,19 +1,20 @@
 package home.gui;
 
-import java.text.SimpleDateFormat;
+import java.time.format.DateTimeFormatter;
 
-public interface GuiConsts {
+public interface IGuiConsts {
 
-    SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy.MM.dd | HH:mm:ss");
+    String DATE_FORMAT = "yyyy.MM.dd | HH:mm:ss";
+    DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern(DATE_FORMAT);
 
-    // table column names
+    // Table column names
     String TYPE = "Type";
     String COLOR = "Color";
     String NUMBER = "Number";
     String DATE = "Date";
     String DELETION_MARK = "Deletion mark";
 
-    // button names
+    // Button names
     String CAR = "Car";
     String TRUCK = "Truck";
     String MOTORCYCLE = "Motorcycle";
@@ -27,17 +28,20 @@ public interface GuiConsts {
 
     // Menu names
     String FILE = "File";
-    String CREATE_OR_OPEN = "Create or Open";
+    String CREATE_OR_OPEN = "Create / Open";
     String SAVE = "Save";
+    String SAVE_AS = "Save as ...";
     String STYLE = "Style";
-    String DEFAULT = "Default";
-    String SYSTEM = "System";
     String HELP = "Help";
     String ABOUT = "About";
 
     // About dialog text
     String ABOUT_TITLE = "About";
-    String ABOUT_TEXT = "Test application.";
+    String ABOUT_TEXT = "Test application.\nVersion: %s";
+
+    // Save dialog text
+    String SAVE_TITLE = "Saving";
+    String SAVE_TEXT = "Saved successfully";
 
     // DB label
     String CHOOSE_DB_FILE = "Choose SQLite DB file via [File] -> [Open]";

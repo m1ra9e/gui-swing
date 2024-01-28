@@ -6,25 +6,28 @@ import java.awt.Dimension;
 import javax.swing.JFrame;
 
 @SuppressWarnings("serial")
-public class CustomJFrame extends JFrame {
+public final class CustomJFrame extends JFrame {
 
-    private static final String TITLE = "VEHICLE ACCOUNTING";
+    private static final int GAP = 2;
 
-    private static final int GAP_BETWEEN_COMPONENTS = 2;
+    private static final int PREF_WIDTH = 650;
+    private static final int PREF_HEIGHT = 500;
 
-    public static final int FRAME_PREF_WIDTH = 650;
-    public static final int FRAME_PREF_HEIGHT = 500;
+    private static final int MIN_WIDTH = 400;
+    private static final int MIN_HEIGHT = 400;
 
-    public static final int FRAME_MIN_WIDTH = 400;
-    public static final int FRAME_MIN_HEIGHT = 400;
+    private CustomJFrame(String title) {
+        super(title);
+    }
 
-    public CustomJFrame() {
-        super(TITLE);
-        setSize(FRAME_PREF_WIDTH, FRAME_PREF_HEIGHT);
-        setPreferredSize(new Dimension(FRAME_PREF_WIDTH, FRAME_PREF_HEIGHT));
-        setMinimumSize(new Dimension(FRAME_MIN_WIDTH, FRAME_MIN_HEIGHT));
-        setLocationRelativeTo(null);
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setLayout(new BorderLayout(GAP_BETWEEN_COMPONENTS, GAP_BETWEEN_COMPONENTS));
+    public static CustomJFrame create(String title) {
+        var frame = new CustomJFrame(title);
+        frame.setSize(PREF_WIDTH, PREF_HEIGHT);
+        frame.setPreferredSize(new Dimension(PREF_WIDTH, PREF_HEIGHT));
+        frame.setMinimumSize(new Dimension(MIN_WIDTH, MIN_HEIGHT));
+        frame.setLocationRelativeTo(null);
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setLayout(new BorderLayout(GAP, GAP));
+        return frame;
     }
 }

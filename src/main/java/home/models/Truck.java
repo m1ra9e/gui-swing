@@ -2,7 +2,7 @@ package home.models;
 
 import java.util.Objects;
 
-public class Truck extends AbstractVehicleWithTrailer {
+public final class Truck extends AbstractVehicleWithTrailer {
 
     private boolean isTransportsCargo;
 

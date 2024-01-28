@@ -1,55 +1,78 @@
 
 package home.db;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.util.Properties;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import home.Settings;
+import home.utils.Utils;
 
-public class Connector {
+public final class Connector {
 
-    private static final Logger LOG = Logger.getLogger(Connector.class);
+    private static final Logger LOG = LoggerFactory.getLogger(Connector.class);
+
+    private static final String QUERY_TIMEOUT = "30";
+
+    private static final String JDBC_DRIVER_POSTGRESQL = "org.postgresql.Driver";
+    private static final String URL_POSTGRESQL = "jdbc:postgresql://%s:%s/%s";
 
     private static final String JDBC_DRIVER_SQLITE = "org.sqlite.JDBC";
-    private static final String CONNECTION_URL_SQLITE = "jdbc:sqlite:%s";
+    private static final String URL_SQLITE = "jdbc:sqlite:%s";
 
-    private static Connection connection;
+    // TODO add PostgreSQL
+    public static Connection getConnectionToPostgreSQL(String host, String port,
+            String dbName, String user, String password) throws SQLException {
+        String url = generatePostgreSqlURL(host, port, dbName);
 
-    public static Connection getConnection() throws SQLException {
-        if (connection == null || connection.isClosed()) {
-            try {
-                Class.forName(JDBC_DRIVER_SQLITE);
+        Properties props = new Properties();
+        props.setProperty("user", user);
+        props.setProperty("password", password);
+        props.setProperty("reWriteBatchedInserts", "true");
+        props.setProperty("loginTimeout", QUERY_TIMEOUT);
+        props.setProperty("connectTimeout", QUERY_TIMEOUT);
+        props.setProperty("cancelSignalTimeout", QUERY_TIMEOUT);
+        props.setProperty("socketTimeout", QUERY_TIMEOUT);
 
-                // Driver driver = (Driver) Class.forName(JDBC_DRIVER_SQLITE).newInstance();
-                // DriverManager.registerDriver(driver);
-
-                connection = DriverManager.getConnection(
-                        String.format(CONNECTION_URL_SQLITE, Settings.DB_FILE_PATH));
-            } catch (ClassNotFoundException e) {
-                String errorMsg = "Database driver class not found.";
-                LOG.error(errorMsg);
-                SQLException ex = new SQLException(errorMsg);
-                ex.addSuppressed(e);
-                throw ex;
-            } catch (SQLException e) {
-                LOG.error("Error while connecting to the database.");
-                throw e;
-            }
-        }
-        return connection;
+        return getConnection(url, props, JDBC_DRIVER_POSTGRESQL);
     }
 
-    public static void closeConnection() throws SQLException {
+    private static String generatePostgreSqlURL(String host, String port, String dbName) {
+        String db;
         try {
-            if (connection != null) {
-                connection.close();
-            }
+            db = URLEncoder.encode(dbName, "UTF-8");
+        } catch (UnsupportedEncodingException ex) {
+            LOG.error("Encoding error of database name.", ex);
+            db = dbName;
+        }
+        return String.format(URL_POSTGRESQL, host, port, db);
+    }
+
+    public static Connection getConnectionToSQLite() throws SQLException {
+        return getConnection(String.format(URL_SQLITE, Settings.getDbFilePath()),
+                new Properties(), JDBC_DRIVER_SQLITE);
+    }
+
+    private static Connection getConnection(String url, Properties props, String jdbcDriver)
+            throws SQLException {
+        try {
+            Class.forName(jdbcDriver);
+
+            // Driver driver = (Driver)
+            // Class.forName(jdbcDriver).newInstance();
+            // DriverManager.registerDriver(driver);
+
+            return DriverManager.getConnection(url, props);
+        } catch (ClassNotFoundException e) {
+            throw Utils.logAndCreateSqlException("Database driver class not found.", LOG, e);
         } catch (SQLException e) {
-            LOG.error("Error while closing DB connection.");
-            throw e;
+            throw Utils.logAndCreateSqlException("Error while connecting to the database.", LOG, e);
         }
     }
 

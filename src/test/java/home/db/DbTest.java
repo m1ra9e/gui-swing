@@ -14,21 +14,25 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import home.IConsts;
 import home.Settings;
+import home.Settings.Setting;
+import home.Storage;
 import home.db.dao.DaoSQLite;
 import home.models.AbstractVehicle;
 import home.models.Car;
 
-public class DbTest {
+final class DbTest {
 
-    private static final String DB_FILE_NAME = "database.db";
+    private static final String TEMP_DIR_PROPERTY = "java.io.tmpdir";
 
     private static final String TMP = "tmp_";
+    private static final String DB_FILE_NAME = "database.db";
 
     private static File generatedDbFile;
 
     @BeforeEach
-    public void initializeTemporaryDbFile() {
+    void initializeTemporaryDbFile() {
         deletePreviousTmpFiles();
         try {
             generatedDbFile = File.createTempFile(TMP, DB_FILE_NAME);
@@ -42,7 +46,7 @@ public class DbTest {
     }
 
     private static void deletePreviousTmpFiles() {
-        File tmpDir = new File(System.getProperty("java.io.tmpdir"));
+        File tmpDir = new File(System.getProperty(TEMP_DIR_PROPERTY));
         for (File file : tmpDir.listFiles()) {
             String tmpFileName = file.getName();
             if (file.isFile() && tmpFileName.startsWith(TMP)
@@ -53,12 +57,14 @@ public class DbTest {
     }
 
     @Test
-    public void createDbFileTest() {
+    void createDbFileTest() {
         try (var sampleDbFileStream = getClass().getResourceAsStream(DB_FILE_NAME)) {
             byte[] sampleDbFileByte = sampleDbFileStream.readAllBytes();
-            byte[] generatedDbFileByte = Files.readAllBytes(generatedDbFile.toPath());
             assertNotNull(sampleDbFileByte, "Sample Db file is null.");
+
+            byte[] generatedDbFileByte = Files.readAllBytes(generatedDbFile.toPath());
             assertNotNull(generatedDbFileByte, "Generated Db file is null.");
+
             assertArrayEquals(sampleDbFileByte, generatedDbFileByte);
         } catch (IOException e) {
             fail("Errors while read file.", e);
@@ -66,30 +72,39 @@ public class DbTest {
     }
 
     @Test
-    public void createReadDataTest() {
+    void createReadDataTest() {
         try {
-            var dataObj = new Car();
-            dataObj.setId(1);
-            dataObj.setColor("green");
-            dataObj.setNumber("n555rt");
-            dataObj.setDateTime(System.currentTimeMillis());
-            dataObj.setTransportsPassengers(true);
-            DaoSQLite.getInstance().create(dataObj);
+            // There is no id yet in new data object. Id will be set in database.
+            // That is why we will set it later, from read database object.
+            // It's need for correct comparison.
+            var createdDataObj = new Car();
+            createdDataObj.setColor("green");
+            createdDataObj.setNumber("n555rt");
+            createdDataObj.setDateTime(System.currentTimeMillis());
+            createdDataObj.setTransportsPassengers(true);
 
-            AbstractVehicle readDataObj = DaoSQLite.getInstance().readOne(1);
+            Storage.INSTANCE.updateStorage(createdDataObj, Storage.NO_ROW_IS_SELECTED);
+            DaoSQLite.getInstance().saveAllChanges();
 
-            assertNotNull(readDataObj, "Read data object is null.");
-            assertEquals(dataObj, readDataObj);
+            long id = 1;
+            AbstractVehicle readedDataObj = DaoSQLite.getInstance().readOne(id);
+
+            assertNotNull(readedDataObj, "Read data object is null.");
+
+            // As said before, here we set id from read database object.
+            createdDataObj.setId(readedDataObj.getId());
+
+            assertEquals(createdDataObj, readedDataObj);
         } catch (SQLException e) {
             fail("Errors while work with DB.", e);
         }
     }
 
     @AfterEach
-    public void removeTemporaryDbFile() {
+    void removeTemporaryDbFile() {
         try {
             Files.deleteIfExists(generatedDbFile.toPath());
-            Settings.writeSetting(Settings.DB_FILE_PATH_SETTING_NAME, "");
+            Settings.writeSetting(Setting.DB_FILE_PATH, IConsts.EMPTY_STRING);
         } catch (IOException e) {
             fail("Errors while delete DB file.", e);
         }

@@ -2,7 +2,7 @@ package home.models;
 
 import java.util.Objects;
 
-public class Motorcycle extends AbstractVehicle {
+public final class Motorcycle extends AbstractVehicle {
 
     private boolean hasCradle;
 

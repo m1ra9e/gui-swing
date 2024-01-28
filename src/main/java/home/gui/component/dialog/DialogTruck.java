@@ -2,13 +2,13 @@ package home.gui.component.dialog;
 
 import javax.swing.JCheckBox;
 
-import home.gui.GuiConsts;
+import home.gui.IGuiConsts;
 import home.models.AbstractVehicle;
 import home.models.Truck;
 import home.models.VehicleType;
 
 @SuppressWarnings("serial")
-public class DialogTruck extends AbstractDialogTrailer {
+public final class DialogTruck extends AbstractDialogTrailer {
 
     private JCheckBox chkCargo;
 
@@ -19,9 +19,9 @@ public class DialogTruck extends AbstractDialogTrailer {
     @Override
     protected void createDataComponents() {
         super.createDataComponents();
-        chkCargo = new JCheckBox(GuiConsts.TRANSPORTS_CARGO);
+        chkCargo = new JCheckBox(IGuiConsts.TRANSPORTS_CARGO);
 
-        if (dataObj != null) {
+        if (!isNewDataObj) {
             chkCargo.setSelected(((Truck) dataObj).isTransportsCargo());
         }
     }

@@ -6,14 +6,19 @@ import java.awt.Font;
 import javax.swing.JLabel;
 
 @SuppressWarnings("serial")
-public class CustomJLabel extends JLabel {
+public final class CustomJLabel extends JLabel {
 
     private static final String FONT_NAME = "Courier";
     private static final int FONT_SIZE = 14;
 
-    public CustomJLabel(String text) {
+    private CustomJLabel(String text) {
         super(text);
-        setFont(new Font(FONT_NAME, Font.BOLD, FONT_SIZE));
-        setForeground(Color.BLACK);
+    }
+
+    public static CustomJLabel create(String text) {
+        var label = new CustomJLabel(text);
+        label.setFont(new Font(FONT_NAME, Font.BOLD, FONT_SIZE));
+        label.setForeground(Color.BLACK);
+        return label;
     }
 }

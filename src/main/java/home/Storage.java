@@ -8,50 +8,47 @@ import java.util.Set;
 import home.gui.Gui;
 import home.models.AbstractVehicle;
 
-public class Storage {
+public enum Storage {
+
+    INSTANCE;
 
     public static final int NO_ROW_IS_SELECTED = -1;
 
-    private static final List<AbstractVehicle> DATA_OBJS = new ArrayList<>();
-    private static final Set<Long> DATA_OBJ_IDS_FOR_DELETE = new HashSet<>();
-
-    private static Storage instance;
-
-    private Storage() {
-    }
-
-    public static Storage getInstance() {
-        if (instance == null) {
-            instance = new Storage();
-        }
-        return instance;
-    }
+    private final List<AbstractVehicle> dataObjStorage = new ArrayList<>();
+    private final Set<Long> dataObjIdsForDelete = new HashSet<>();
+    private final Set<Long> dataObjIdsForUpdate = new HashSet<>();
 
     public void refresh(List<AbstractVehicle> dataObjs) {
-        DATA_OBJ_IDS_FOR_DELETE.clear();
-        DATA_OBJS.clear();
-        DATA_OBJS.addAll(dataObjs);
-        Gui.getInstance().refreshTable();
+        dataObjIdsForDelete.clear();
+        dataObjIdsForUpdate.clear();
+        dataObjStorage.clear();
+        dataObjStorage.addAll(dataObjs);
+        Gui.INSTANCE.refreshTable();
     }
 
     public List<AbstractVehicle> getAll() {
-        return DATA_OBJS;
+        return dataObjStorage;
     }
 
     public AbstractVehicle get(int row) {
-        return DATA_OBJS.get(row);
+        return dataObjStorage.get(row);
     }
 
     public Long[] getIdsForDelete() {
-        return DATA_OBJ_IDS_FOR_DELETE.stream().map(id -> Long.valueOf(id))
+        return dataObjIdsForDelete.stream().map(id -> Long.valueOf(id))
                 .toArray(Long[]::new);
+    }
+
+    public Set<Long> getIdsForUpdate() {
+        return dataObjIdsForUpdate;
     }
 
     public void updateStorage(AbstractVehicle dataObj, int tblRowOfSelectedDataObj) {
         if (NO_ROW_IS_SELECTED == tblRowOfSelectedDataObj) {
-            DATA_OBJS.add(dataObj);
+            dataObjStorage.add(dataObj);
         } else {
-            DATA_OBJS.set(tblRowOfSelectedDataObj, dataObj);
+            dataObjStorage.set(tblRowOfSelectedDataObj, dataObj);
+            dataObjIdsForUpdate.add(dataObj.getId());
         }
     }
 
@@ -59,9 +56,9 @@ public class Storage {
         for (AbstractVehicle objForDel : obsMarkedForDelete) {
             long idObjForDel = objForDel.getId();
             if (idObjForDel > 0) {
-                DATA_OBJ_IDS_FOR_DELETE.add(idObjForDel);
+                dataObjIdsForDelete.add(idObjForDel);
             }
         }
-        DATA_OBJS.removeAll(obsMarkedForDelete);
+        dataObjStorage.removeAll(obsMarkedForDelete);
     }
 }

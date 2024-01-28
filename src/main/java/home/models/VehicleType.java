@@ -8,7 +8,7 @@ public enum VehicleType {
 
     private final String type;
 
-    VehicleType(String type) {
+    private VehicleType(String type) {
         this.type = type;
     }
 
@@ -17,8 +17,9 @@ public enum VehicleType {
     }
 
     public static VehicleType getVehicleType(String type) {
+        String typeFormatted = type.strip();
         for (VehicleType vehicleType : VehicleType.values()) {
-            if (type.strip().equalsIgnoreCase(vehicleType.getType())) {
+            if (typeFormatted.equalsIgnoreCase(vehicleType.getType())) {
                 return vehicleType;
             }
         }
