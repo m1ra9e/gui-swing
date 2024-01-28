@@ -10,7 +10,7 @@ import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
 
 @SuppressWarnings("serial")
-public class CustomJPanel extends JPanel {
+public final class CustomJPanel extends JPanel {
 
     public enum PanelType {
         FRAME_TABLE_PANEL,
@@ -50,8 +50,13 @@ public class CustomJPanel extends JPanel {
 
     public static final int EMPTY_BORDER_SIZE = 10;
 
-    public CustomJPanel(PanelType panelType) {
-        setPanelParams(panelType);
+    private CustomJPanel() {
+    }
+
+    public static CustomJPanel create(PanelType panelType) {
+        var panel = new CustomJPanel();
+        panel.setPanelParams(panelType);
+        return panel;
     }
 
     private void setPanelParams(PanelType panelType) {

@@ -1,80 +1,106 @@
 package home;
 
 import java.io.IOException;
+import java.lang.Thread.UncaughtExceptionHandler;
 import java.sql.SQLException;
+import java.util.function.BiFunction;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import home.db.DbInitializer;
 import home.db.dao.DaoSQLite;
 import home.gui.Gui;
 import home.gui.component.CustomJFileChooser;
+import home.gui.component.CustomJFileChooser.ChooserOperation;
 import home.utils.Utils;
 
-public class Main {
+public final class Main {
 
-    private static final Logger LOG = Logger.getLogger(Main.class);
+    private static final Logger LOG = LoggerFactory.getLogger(Main.class);
+
+    private static final String START_LOG_MESSAGE = "Application {} v{} started successfully.";
+
+    private static final String DEFAULT_APP_NAME = "=VEHICLE_ACCOUNTING=";
+    private static final String DEFAULT_APP_VERSION = "UNKNOWN";
+
+    public static String appName;
+    public static String appVersion;
 
     public static void main(String[] args) {
-        initSettings();
-        initGui();
-
-        if (Settings.hasPathToDbFile()) {
-            initDb();
-        } else {
-            try {
-                new CustomJFileChooser(null, CustomJFileChooser.CREATE_OR_OPEN).showChooser();
-                initDb();
-                Gui.getInstance().setDbLabel(Settings.DB_FILE_PATH);
-            } catch (IOException e) {
-                Utils.logAndShowError(LOG, null, "Error while create/open DB file.",
-                        "Create/Open file error.", e);
+        boolean isStarted = false;
+        try {
+            startApplication();
+            isStarted = true;
+            LOG.info(START_LOG_MESSAGE, appName, appVersion);
+        } catch (Exception e) {
+            Utils.logAndShowError(LOG, null, e.getMessage(), "Application start error", e);
+        } finally {
+            if (!isStarted) {
                 System.exit(1);
             }
         }
     }
 
-    private static void initSettings() {
-        try {
-            Settings.readSettings();
-        } catch (Exception e) {
-            Utils.logAndShowError(LOG, null, e.getLocalizedMessage(),
-                    "Settings initialization error", e);
-            System.exit(1);
-        }
+    private static void startApplication() {
+        setUncaughtExceptionProcessing();
+
+        initAppDescription();
+        Settings.readSettings();
+        Gui.INSTANCE.buildGui();
+
+        initDb();
     }
 
-    private static void initGui() {
-        try {
-            Gui.getInstance().buildGui();
-        } catch (Exception e) {
-            Utils.logAndShowError(LOG, null, e.getLocalizedMessage(),
-                    "GUI initialization error", e);
-            System.exit(1);
-        }
+    private static void setUncaughtExceptionProcessing() {
+        UncaughtExceptionHandler handler = new UncaughtExceptionHandler() {
+            @Override
+            public void uncaughtException(Thread t, Throwable e) {
+                Utils.logAndShowError(LOG, null, e.getMessage(), "Error", e);
+                System.exit(1);
+            }
+        };
+        Thread.setDefaultUncaughtExceptionHandler(handler);
+    }
+
+    private static void initAppDescription() {
+        BiFunction<String, String, String> getSafeVal = (val, def) -> val != null ? val : def;
+        Package pacage = Main.class.getPackage();
+        appName = getSafeVal.apply(pacage.getImplementationTitle(), DEFAULT_APP_NAME);
+        appVersion = getSafeVal.apply(pacage.getImplementationVersion(), DEFAULT_APP_VERSION);
     }
 
     private static void initDb() {
-        try {
-            DbInitializer.createTableIfNotExists();
+        if (Settings.hasPathToDbFile()) {
             readDataFromDb();
-        } catch (Exception e) {
-            Utils.logAndShowError(LOG, null, e.getLocalizedMessage(),
-                    "DB initialization error", e);
-            System.exit(1);
+        } else {
+            try {
+                CustomJFileChooser.showChooser(null, ChooserOperation.CREATE_OR_OPEN);
+                readDataFromDb();
+                Gui.INSTANCE.setDbLabel(Settings.getDbFilePath());
+            } catch (IOException e) {
+                throw new IllegalStateException("Error while create/open DB file.", e);
+            }
         }
     }
 
     private static void readDataFromDb() {
-        Utils.runInThread(() -> {
-            try {
-                Storage.getInstance().refresh(DaoSQLite.getInstance().readAll());
-            } catch (SQLException e) {
-                Utils.logAndShowError(LOG, null,
-                        "Error while read data from database: " + e.getLocalizedMessage(),
-                        "Data reading error", e);
-                System.exit(1);
-            }
-        });
+        try {
+            DbInitializer.createTableIfNotExists();
+
+            Utils.runInThread("-> read data from database", () -> {
+                try {
+                    Storage.INSTANCE.refresh(DaoSQLite.getInstance().readAll());
+                } catch (SQLException e) {
+                    Utils.logAndShowError(LOG, null,
+                            "Error while read data from database: " + e.getMessage(),
+                            "Data reading error", e);
+                    throw new IllegalStateException("Error while read data from database: "
+                            + e.getMessage(), e);
+                }
+            });
+        } catch (Exception e) {
+            throw new IllegalStateException("Error while read data from database.", e);
+        }
     }
 }

@@ -2,35 +2,52 @@ package home.gui.component;
 
 import javax.swing.JTable;
 import javax.swing.ListSelectionModel;
+import javax.swing.table.TableColumn;
 
 import home.Storage;
 
 @SuppressWarnings("serial")
-public class CustomJTable extends JTable {
+public final class CustomJTable extends JTable {
 
-    private static final int FIRST_COL_MIN_WIDTH = 100;
-    private static final int SECOND_COL_MIN_WIDTH = 50;
-    private static final int THIRD_COL_MIN_WIDTH = 70;
-    private static final int FOURTH_COL_MIN_WIDTH = 130;
+    private static final int TYPE_MIN_WIDTH = 100;
+    private static final int COLOR_MIN_WIDTH = 50;
+    private static final int NUMBER_MIN_WIDTH = 70;
+    private static final int DATE_MIN_WIDTH = 130;
 
-    private static final int FIFTH_COL_MIN_WIDTH = 50;
-    private static final int FIFTH_COL_MAX_WIDTH = 200;
-    private static final int FIFTH_COL_PREF_WIDTH = 130;
+    private static final int DEL_MARK_MIN_WIDTH = 87;
+    private static final int DEL_MARK_MAX_WIDTH = 87;
+    private static final int DEL_MARK_PREF_WIDTH = 87;
 
-    public CustomJTable() {
-        setModel(new CustomJTableDataModel(Storage.getInstance().getAll()));
-        setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        setAutoResizeMode(JTable.AUTO_RESIZE_LAST_COLUMN);
+    private CustomJTable() {
+    }
 
-        getColumnModel().getColumn(0).setMinWidth(FIRST_COL_MIN_WIDTH);
-        getColumnModel().getColumn(1).setMinWidth(SECOND_COL_MIN_WIDTH);
-        getColumnModel().getColumn(2).setMinWidth(THIRD_COL_MIN_WIDTH);
-        getColumnModel().getColumn(3).setMinWidth(FOURTH_COL_MIN_WIDTH);
+    public static CustomJTable create() {
+        var table = new CustomJTable();
+        table.setModel(new CustomJTableDataModel(Storage.INSTANCE.getAll()));
+        table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
+        // table.setAutoResizeMode(JTable.AUTO_RESIZE_LAST_COLUMN);
 
-        getColumnModel().getColumn(4).setMinWidth(FIFTH_COL_MIN_WIDTH);
-        getColumnModel().getColumn(4).setMaxWidth(FIFTH_COL_MAX_WIDTH);
-        getColumnModel().getColumn(4).setPreferredWidth(FIFTH_COL_PREF_WIDTH);
+        table.setColMinWidth(CustomJTableDataModel.TYPE_COL_IDX, TYPE_MIN_WIDTH);
+        table.setColMinWidth(CustomJTableDataModel.COLOR_COL_IDX, COLOR_MIN_WIDTH);
+        table.setColMinWidth(CustomJTableDataModel.NUMBER_COL_IDX, NUMBER_MIN_WIDTH);
+        table.setColMinWidth(CustomJTableDataModel.DATE_COL_IDX, DATE_MIN_WIDTH);
 
-        // setPreferredScrollableViewportSize(new Dimension(450, 150));
+        table.setColWidths(CustomJTableDataModel.DEL_MARK_COL_IDX,
+                DEL_MARK_MIN_WIDTH, DEL_MARK_MAX_WIDTH, DEL_MARK_PREF_WIDTH);
+
+        // table.setPreferredScrollableViewportSize(new Dimension(400, 150));
+        return table;
+    }
+
+    private void setColMinWidth(int colPosition, int width) {
+        getColumnModel().getColumn(colPosition).setMinWidth(width);
+    }
+
+    private void setColWidths(int colPosition, int minWidth, int maxWidth, int prefWidth) {
+        TableColumn tblCol = getColumnModel().getColumn(colPosition);
+        tblCol.setMinWidth(minWidth);
+        tblCol.setMaxWidth(maxWidth);
+        tblCol.setPreferredWidth(prefWidth);
     }
 }
