@@ -15,6 +15,7 @@ import javax.xml.stream.XMLStreamReader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import home.file.IImporter;
 import home.file.Tag;
 import home.model.AbstractVehicle;
 import home.model.AbstractVehicleWithTrailer;
@@ -25,11 +26,12 @@ import home.model.VehicleType;
 import home.utils.LogUtils;
 import home.utils.Utils;
 
-public final class XmlImporter {
+public final class XmlImporter implements IImporter {
 
     private static final Logger LOG = LoggerFactory.getLogger(XmlImporter.class);
 
-    public static List<AbstractVehicle> importDataObjsFromFile(File file) {
+    @Override
+    public List<AbstractVehicle> importDataObjsFromFile(File file) {
         try (var fileInputStream = new FileInputStream(file);
                 var xmlReaderAutoCloseWrapper = new XmlReaderAutoCloseWrapper(XMLInputFactory
                         .newInstance().createXMLStreamReader(fileInputStream))) {
@@ -152,7 +154,7 @@ public final class XmlImporter {
         }
     }
 
-    private static void chcekAttribute(XMLStreamReader reader) {
+    private void chcekAttribute(XMLStreamReader reader) {
         int attrCount = reader.getAttributeCount();
         if (attrCount > 1) {
             throw new IllegalArgumentException("Wrong attribute count in tag [%s] : %d"
@@ -166,7 +168,7 @@ public final class XmlImporter {
         }
     }
 
-    private static AbstractVehicle createDataObj(XMLStreamReader reader) {
+    private AbstractVehicle createDataObj(XMLStreamReader reader) {
         String type = reader.getAttributeValue(0);
 
         VehicleType vehicleType = VehicleType.getVehicleType(type);
@@ -181,7 +183,7 @@ public final class XmlImporter {
         };
     }
 
-    private static void chcekEvent(int currentParseEvent, XMLStreamReader reader)
+    private void chcekEvent(int currentParseEvent, XMLStreamReader reader)
             throws XMLStreamException {
         if (XMLStreamConstants.CHARACTERS != currentParseEvent) {
             throw new IllegalArgumentException("Broken xml file: text area error in tag [%s]"
@@ -195,8 +197,5 @@ public final class XmlImporter {
         public void close() throws Exception {
             reader.close();
         }
-    }
-
-    private XmlImporter() {
     }
 }

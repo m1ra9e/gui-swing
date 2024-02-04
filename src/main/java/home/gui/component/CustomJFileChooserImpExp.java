@@ -10,6 +10,8 @@ import javax.swing.JOptionPane;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
 import home.file.FileHandler;
+import home.file.IExporter;
+import home.file.IImporter;
 import home.file.csv.CsvExporter;
 import home.file.csv.CsvImporter;
 import home.file.json_yaml.JsonExporter;
@@ -60,17 +62,17 @@ public final class CustomJFileChooserImpExp extends JFileChooser {
         super(APPLICATION_DIR);
     }
 
-    public static void createAndShowChooser(Component parent, DataFormat oper,
+    public static void createAndShowChooser(Component parent, DataFormat dataFormat,
             boolean isImport) throws IOException {
         var fileChooser = new CustomJFileChooserImpExp();
         fileChooser.setFileFilter(new FileNameExtensionFilter(
-                oper.extensionDescription, new String[] { oper.extension }));
-        fileChooser.showChooser(parent, oper, isImport);
+                dataFormat.extensionDescription, new String[] { dataFormat.extension }));
+        fileChooser.showChooser(parent, dataFormat, isImport);
     }
 
-    private void showChooser(Component parent, DataFormat oper,
+    private void showChooser(Component parent, DataFormat dataFormat,
             boolean isImport) throws IOException {
-        String direction = (isImport ? "Import from " : "Export to ") + oper.name();
+        String direction = (isImport ? "Import from " : "Export to ") + dataFormat.name();
 
         int chooserState = showDialog(parent, direction);
         if (JFileChooser.APPROVE_OPTION != chooserState) {
@@ -78,32 +80,33 @@ public final class CustomJFileChooserImpExp extends JFileChooser {
         }
 
         File file = getSelectedFile();
-        file = addExtensionToFileIfNotExists(file, oper.getExtension());
+        file = addExtensionToFileIfNotExists(file, dataFormat.getExtension());
 
         if (isImport) {
-            List<AbstractVehicle> dataObjs = switch (oper) {
-                case XML -> XmlImporter.importDataObjsFromFile(file);
-                case YAML -> YamlImporter.importDataObjsFromFile(file);
-                case JSON -> JsonImporter.importDataObjsFromFile(file);
-                case CSV -> CsvImporter.importDataObjsFromFile(file);
-                case BSER -> BserImporter.importDataObjsFromFile(file);
-                case SER -> SerImporter.importDataObjsFromFile(file);
+            IImporter importer = switch (dataFormat) {
+                case XML -> new XmlImporter();
+                case YAML -> new YamlImporter();
+                case JSON -> new JsonImporter();
+                case CSV -> new CsvImporter();
+                case BSER -> new BserImporter();
+                case SER -> new SerImporter();
             };
+            List<AbstractVehicle> dataObjs = importer.importDataObjsFromFile(file);
             DataActionInGui.add(dataObjs);
         } else {
-            String text = switch (oper) {
-                case XML -> XmlExporter.exportAllDataObjsToString();
-                case YAML -> YamlExporter.exportAllDataObjsToString();
-                case JSON -> JsonExporter.exportAllDataObjsToString();
-                case CSV -> CsvExporter.exportAllDataObjsToString();
-                case BSER -> BserExporter.exportAllDataObjsToString();
-                case SER -> {
-                    SerExporter.exportAllDataObjsToFile(file);
-                    yield null;
-                }
+            IExporter exporter = switch (dataFormat) {
+                case XML -> new XmlExporter();
+                case YAML -> new YamlExporter();
+                case JSON -> new JsonExporter();
+                case CSV -> new CsvExporter();
+                case BSER -> new BserExporter();
+                case SER -> new SerExporter();
             };
 
-            if (text != null) {
+            if (DataFormat.SER == dataFormat) {
+                ((SerExporter) exporter).exportAllDataObjsToFile(file);
+            } else {
+                String text = exporter.exportAllDataObjsToString();
                 FileHandler.writeStringToFile(file, text);
             }
         }

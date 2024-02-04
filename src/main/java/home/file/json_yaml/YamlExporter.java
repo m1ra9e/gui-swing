@@ -16,24 +16,8 @@ public final class YamlExporter extends AbstractJsonYamlExporter {
     private static final int INDENT = 4;
     private static final int INDICATOR_INDENT = 2;
 
-    private static YamlExporter instance;
-
-    private YamlExporter() {
-    }
-
-    private static YamlExporter getInstance() {
-        if (instance == null) {
-            instance = new YamlExporter();
-        }
-        return instance;
-    }
-
-    public static String exportAllDataObjsToString() {
-        return getInstance().exportAllToString();
-    }
-
     @Override
-    protected String exportAllToString() {
+    public String exportAllDataObjsToString() {
         var convertedDataObjs = new ArrayList<Map<String, String>>();
         for (AbstractVehicle dataObj : Storage.INSTANCE.getAll()) {
             convertedDataObjs.add(convertDataObjToMap(dataObj));

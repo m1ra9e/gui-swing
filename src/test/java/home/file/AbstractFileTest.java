@@ -19,6 +19,8 @@ import home.utils.Utils;
 
 abstract sealed class AbstractFileTest permits ImporterTest, ExporterTest {
 
+    private static final String FILE_NAME = "data_objs.%s";
+
     private static List<AbstractVehicle> dataObjs = new LinkedList<>();
 
     @BeforeAll
@@ -26,7 +28,8 @@ abstract sealed class AbstractFileTest permits ImporterTest, ExporterTest {
         Storage.INSTANCE.initDataObjs(getTestDataObjs());
     }
 
-    protected Path getFilePath(String fileName) throws URISyntaxException {
+    protected Path getFilePath(String extension) throws URISyntaxException {
+        String fileName = FILE_NAME.formatted(extension);
         return Paths.get(getClass().getResource(fileName).toURI()).toAbsolutePath();
     }
 

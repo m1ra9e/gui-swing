@@ -23,24 +23,8 @@ public final class JsonImporter extends AbstractJsonYamlImporter {
     private static final TypeReference<Map<String, List<Map<String, String>>>> TYPE_REFERENCE = new TypeReference<>() {
     };
 
-    private static JsonImporter instance;
-
-    private JsonImporter() {
-    }
-
-    private static JsonImporter getInstance() {
-        if (instance == null) {
-            instance = new JsonImporter();
-        }
-        return instance;
-    }
-
-    public static List<AbstractVehicle> importDataObjsFromFile(File file) {
-        return getInstance().importFromFile(file);
-    }
-
     @Override
-    protected List<AbstractVehicle> importFromFile(File file) {
+    public List<AbstractVehicle> importDataObjsFromFile(File file) {
         try {
             ObjectMapper objectMapper = new ObjectMapper();
             Map<String, List<Map<String, String>>> allData = objectMapper.readValue(file, TYPE_REFERENCE);

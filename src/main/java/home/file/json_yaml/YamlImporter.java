@@ -22,24 +22,8 @@ public final class YamlImporter extends AbstractJsonYamlImporter {
 
     private static final Logger LOG = LoggerFactory.getLogger(YamlImporter.class);
 
-    private static YamlImporter instance;
-
-    private YamlImporter() {
-    }
-
-    private static YamlImporter getInstance() {
-        if (instance == null) {
-            instance = new YamlImporter();
-        }
-        return instance;
-    }
-
-    public static List<AbstractVehicle> importDataObjsFromFile(File file) {
-        return getInstance().importFromFile(file);
-    }
-
     @Override
-    protected List<AbstractVehicle> importFromFile(File file) {
+    public List<AbstractVehicle> importDataObjsFromFile(File file) {
         try (InputStream inputStream = new FileInputStream(file)) {
             Yaml yaml = new Yaml();
             Map<String, Object> allData = yaml.load(inputStream);

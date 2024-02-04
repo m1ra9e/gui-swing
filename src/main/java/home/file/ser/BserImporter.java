@@ -19,24 +19,8 @@ public final class BserImporter extends AbstractSerImporter {
 
     private static final Logger LOG = LoggerFactory.getLogger(BserImporter.class);
 
-    private static BserImporter instance;
-
-    private BserImporter() {
-    }
-
-    private static BserImporter getInstance() {
-        if (instance == null) {
-            instance = new BserImporter();
-        }
-        return instance;
-    }
-
-    public static List<AbstractVehicle> importDataObjsFromFile(File file) {
-        return getInstance().importFromFile(file);
-    }
-
     @Override
-    protected List<AbstractVehicle> importFromFile(File file) {
+    public List<AbstractVehicle> importDataObjsFromFile(File file) {
         // StandardCharsets.ISO_8859_1 because of it used in
         // Base64 logic for encode and decode operations.
         String serializedDataObjsStr = FileHandler

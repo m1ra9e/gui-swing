@@ -1,10 +1,9 @@
 package home.file.json_yaml;
 
-import java.io.File;
-import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import home.file.IImporter;
 import home.file.Tag;
 import home.model.AbstractVehicle;
 import home.model.AbstractVehicleWithTrailer;
@@ -14,9 +13,8 @@ import home.model.Truck;
 import home.model.VehicleType;
 import home.utils.Utils;
 
-abstract sealed class AbstractJsonYamlImporter permits JsonImporter,YamlImporter {
-
-    protected abstract List<AbstractVehicle> importFromFile(File file);
+abstract sealed class AbstractJsonYamlImporter
+        implements IImporter permits JsonImporter, YamlImporter {
 
     protected void checkCountOfRootTags(int countOfRootTags) {
         if (countOfRootTags != 1) {

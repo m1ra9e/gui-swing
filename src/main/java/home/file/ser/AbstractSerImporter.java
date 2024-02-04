@@ -1,15 +1,14 @@
 package home.file.ser;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.util.List;
 
+import home.file.IImporter;
 import home.model.AbstractVehicle;
 
-abstract sealed class AbstractSerImporter permits BserImporter,SerImporter {
-
-    protected abstract List<AbstractVehicle> importFromFile(File file);
+abstract sealed class AbstractSerImporter
+        implements IImporter permits BserImporter, SerImporter {
 
     protected List<AbstractVehicle> readDataObjs(ObjectInputStream objInputStream)
             throws ClassNotFoundException, IOException {

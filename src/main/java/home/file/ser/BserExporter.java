@@ -9,13 +9,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import home.Storage;
+import home.file.IExporter;
 import home.utils.LogUtils;
 
-public final class BserExporter {
+public final class BserExporter implements IExporter {
 
     private static final Logger LOG = LoggerFactory.getLogger(BserExporter.class);
 
-    public static String exportAllDataObjsToString() {
+    @Override
+    public String exportAllDataObjsToString() {
         try (var byteArrOutputStream = new ByteArrayOutputStream();
                 var objOutputStream = new ObjectOutputStream(byteArrOutputStream)) {
             objOutputStream.writeObject(Storage.INSTANCE.getAll());
@@ -23,8 +25,5 @@ public final class BserExporter {
         } catch (IOException e) {
             throw LogUtils.logAndCreateIllegalStateException("BSER export converter error", LOG, e);
         }
-    }
-
-    private BserExporter() {
     }
 }

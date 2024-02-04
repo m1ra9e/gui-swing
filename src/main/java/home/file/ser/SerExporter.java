@@ -10,13 +10,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import home.Storage;
+import home.file.IExporter;
 import home.utils.LogUtils;
 
-public final class SerExporter {
+public final class SerExporter implements IExporter {
 
     private static final Logger LOG = LoggerFactory.getLogger(SerExporter.class);
 
-    public static void exportAllDataObjsToFile(File file) {
+    public void exportAllDataObjsToFile(File file) {
         try (var fileOutputStream = new FileOutputStream(file);
                 var bufferedOutputStream = new BufferedOutputStream(fileOutputStream);
                 var objOutputStream = new ObjectOutputStream(bufferedOutputStream)) {
@@ -27,6 +28,11 @@ public final class SerExporter {
         }
     }
 
-    private SerExporter() {
+    @Override
+    public String exportAllDataObjsToString() {
+        throw LogUtils.logAndCreateIllegalStateException(
+                "SER export error: unimplemented method,"
+                        + " use 'exportAllDataObjsToFile(file file)' instead",
+                LOG, null);
     }
 }

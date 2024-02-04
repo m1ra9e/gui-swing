@@ -12,6 +12,7 @@ import com.opencsv.CSVWriterBuilder;
 import com.opencsv.ICSVWriter;
 
 import home.Storage;
+import home.file.IExporter;
 import home.model.AbstractVehicle;
 import home.model.AbstractVehicleWithTrailer;
 import home.model.Car;
@@ -21,7 +22,7 @@ import home.model.VehicleType;
 import home.utils.LogUtils;
 import home.utils.Utils;
 
-public final class CsvExporter {
+public final class CsvExporter implements IExporter {
 
     private static final Logger LOG = LoggerFactory.getLogger(CsvExporter.class);
 
@@ -30,7 +31,8 @@ public final class CsvExporter {
 
     private static final String FALSE = Boolean.FALSE.toString();
 
-    public static String exportAllDataObjsToString() {
+    @Override
+    public String exportAllDataObjsToString() {
         List<AbstractVehicle> dataObjStorage = Storage.INSTANCE.getAll();
 
         var convertedDataObjs = new ArrayList<String[]>(dataObjStorage.size() + 1);
@@ -51,7 +53,7 @@ public final class CsvExporter {
         }
     }
 
-    private static String[] convertDataObjToArray(AbstractVehicle dataObj) {
+    private String[] convertDataObjToArray(AbstractVehicle dataObj) {
         var array = new String[ICsvConsts.CSV_ROW_SIZE];
 
         VehicleType type = dataObj.getType();
@@ -86,8 +88,5 @@ public final class CsvExporter {
         array[ICsvConsts.HAS_CRADLE_IDX] = hasCradle;
 
         return array;
-    }
-
-    private CsvExporter() {
     }
 }

@@ -3,6 +3,7 @@ package home.file.json_yaml;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import home.file.IExporter;
 import home.file.Tag;
 import home.model.AbstractVehicle;
 import home.model.AbstractVehicleWithTrailer;
@@ -12,9 +13,8 @@ import home.model.Truck;
 import home.model.VehicleType;
 import home.utils.Utils;
 
-abstract sealed class AbstractJsonYamlExporter permits JsonExporter,YamlExporter {
-
-    protected abstract String exportAllToString();
+abstract sealed class AbstractJsonYamlExporter
+        implements IExporter permits JsonExporter, YamlExporter {
 
     protected Map<String, String> convertDataObjToMap(AbstractVehicle dataObj) {
         var map = new LinkedHashMap<String, String>();
@@ -48,5 +48,4 @@ abstract sealed class AbstractJsonYamlExporter permits JsonExporter,YamlExporter
 
         return map;
     }
-
 }

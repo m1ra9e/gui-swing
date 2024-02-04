@@ -57,6 +57,8 @@ final class AbstractDaoTest {
         }
     }
 
+    // Think about replacing it by
+    // Arrays.stream(strBatchResults.split(",")).mapToInt(Integer::parseInt).toArray();
     private int[] convertToIntArray(String strBatchResults) {
         if (strBatchResults == null) {
             return null;

@@ -21,6 +21,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import home.Storage;
+import home.file.IExporter;
 import home.file.Tag;
 import home.model.AbstractVehicle;
 import home.model.AbstractVehicleWithTrailer;
@@ -30,7 +31,7 @@ import home.model.Truck;
 import home.utils.LogUtils;
 import home.utils.Utils;
 
-public final class XmlExporter {
+public final class XmlExporter implements IExporter {
 
     private static final Logger LOG = LoggerFactory.getLogger(XmlExporter.class);
 
@@ -38,7 +39,8 @@ public final class XmlExporter {
     private static final String XML_INDENT = "yes";
     private static final String XML_STANDALONE = "yes";
 
-    public static String exportAllDataObjsToString() {
+    @Override
+    public String exportAllDataObjsToString() {
         try (var dataObjsOutputStream = new ByteArrayOutputStream()) {
             writeDataObjsToXmlOutput(dataObjsOutputStream);
             String xml = new String(dataObjsOutputStream.toByteArray(), StandardCharsets.UTF_8);
@@ -48,7 +50,7 @@ public final class XmlExporter {
         }
     }
 
-    private static void writeDataObjsToXmlOutput(OutputStream dataObjsOutputStream) {
+    private void writeDataObjsToXmlOutput(OutputStream dataObjsOutputStream) {
         try (var xmlWriterAutoCloseWrapper = new XmlWriterAutoCloseWrapper(XMLOutputFactory
                 .newInstance().createXMLStreamWriter(dataObjsOutputStream, StandardCharsets.UTF_8.name()))) {
             XMLStreamWriter xmlWriter = xmlWriterAutoCloseWrapper.writer();
@@ -67,7 +69,7 @@ public final class XmlExporter {
 
     }
 
-    private static void addObjToXmlWriter(XMLStreamWriter xmlWriter,
+    private void addObjToXmlWriter(XMLStreamWriter xmlWriter,
             AbstractVehicle dataObj) throws XMLStreamException {
         xmlWriter.writeStartElement(Tag.VEHICLE.getTagName());
         xmlWriter.writeAttribute(Tag.TYPE.getTagName(), dataObj.getType().name());
@@ -111,7 +113,7 @@ public final class XmlExporter {
         xmlWriter.writeEndElement();
     }
 
-    private static String formatXML(String xml) {
+    private String formatXML(String xml) {
         try (var inputReader = new StringReader(xml);
                 var outputWriter = new StringWriter()) {
             Transformer transformer = TransformerFactory.newInstance().newTransformer();
@@ -138,8 +140,5 @@ public final class XmlExporter {
         public void close() throws Exception {
             writer.close();
         }
-    }
-
-    private XmlExporter() {
     }
 }

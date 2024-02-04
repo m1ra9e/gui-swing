@@ -17,24 +17,8 @@ public final class SerImporter extends AbstractSerImporter {
 
     private static final Logger LOG = LoggerFactory.getLogger(SerImporter.class);
 
-    private static SerImporter instance;
-
-    private SerImporter() {
-    }
-
-    private static SerImporter getInstance() {
-        if (instance == null) {
-            instance = new SerImporter();
-        }
-        return instance;
-    }
-
-    public static List<AbstractVehicle> importDataObjsFromFile(File file) {
-        return getInstance().importFromFile(file);
-    }
-
     @Override
-    protected List<AbstractVehicle> importFromFile(File file) {
+    public List<AbstractVehicle> importDataObjsFromFile(File file) {
         try (var fileInputStream = new FileInputStream(file);
                 var bufInputStream = new BufferedInputStream(fileInputStream);
                 var objInputStream = new ObjectInputStream(bufInputStream)) {

@@ -20,24 +20,8 @@ public final class JsonExporter extends AbstractJsonYamlExporter {
 
     private static final Logger LOG = LoggerFactory.getLogger(JsonExporter.class);
 
-    private static JsonExporter instance;
-
-    private JsonExporter() {
-    }
-
-    private static JsonExporter getInstance() {
-        if (instance == null) {
-            instance = new JsonExporter();
-        }
-        return instance;
-    }
-
-    public static String exportAllDataObjsToString() {
-        return getInstance().exportAllToString();
-    }
-
     @Override
-    protected String exportAllToString() {
+    public String exportAllDataObjsToString() {
         try {
             var convertedDataObjs = new ArrayList<Map<String, String>>();
             for (AbstractVehicle dataObj : Storage.INSTANCE.getAll()) {

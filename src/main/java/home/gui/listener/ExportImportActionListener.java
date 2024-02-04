@@ -13,14 +13,14 @@ import home.utils.LogUtils;
 
 public final class ExportImportActionListener implements ActionListener {
 
-    private final DataFormat impExpType;
+    private final DataFormat dataFomat;
     private final boolean isImport;
     private final Component parent;
     private final Logger log;
 
-    public ExportImportActionListener(DataFormat impExpType,
+    public ExportImportActionListener(DataFormat dataFormat,
             boolean isImport, Component parent, Logger log) {
-        this.impExpType = impExpType;
+        this.dataFomat = dataFormat;
         this.isImport = isImport;
         this.parent = parent;
         this.log = log;
@@ -31,7 +31,7 @@ public final class ExportImportActionListener implements ActionListener {
         ThreadUtil.runInThread(() -> {
             Thread.currentThread().setName("-> export/import operation");
             try {
-                CustomJFileChooserImpExp.createAndShowChooser(parent, impExpType, isImport);
+                CustomJFileChooserImpExp.createAndShowChooser(parent, dataFomat, isImport);
             } catch (Exception e) {
                 LogUtils.logAndShowError(log, parent, e.getMessage(), "Export/Import error", e);
             }

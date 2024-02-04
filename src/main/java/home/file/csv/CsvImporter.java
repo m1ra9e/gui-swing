@@ -14,6 +14,7 @@ import org.slf4j.LoggerFactory;
 import com.opencsv.CSVReader;
 import com.opencsv.exceptions.CsvException;
 
+import home.file.IImporter;
 import home.model.AbstractVehicle;
 import home.model.AbstractVehicleWithTrailer;
 import home.model.Car;
@@ -23,11 +24,12 @@ import home.model.VehicleType;
 import home.utils.LogUtils;
 import home.utils.Utils;
 
-public final class CsvImporter {
+public final class CsvImporter implements IImporter {
 
     private static final Logger LOG = LoggerFactory.getLogger(CsvImporter.class);
 
-    public static List<AbstractVehicle> importDataObjsFromFile(File file) {
+    @Override
+    public List<AbstractVehicle> importDataObjsFromFile(File file) {
         try (CSVReader reader = new CSVReader(new FileReader(file))) {
             List<String[]> rawDataObjs = reader.readAll();
             List<AbstractVehicle> dataObjs = parse(rawDataObjs);
@@ -47,7 +49,7 @@ public final class CsvImporter {
         }
     }
 
-    private static List<AbstractVehicle> parse(List<String[]> rawDataObjs) {
+    private List<AbstractVehicle> parse(List<String[]> rawDataObjs) {
         checkElementsCountInRawDataObjs(rawDataObjs);
 
         var dataObjs = new ArrayList<AbstractVehicle>();
@@ -57,7 +59,7 @@ public final class CsvImporter {
         return dataObjs;
     }
 
-    private static void checkElementsCountInRawDataObjs(List<String[]> rawDataObjs) {
+    private void checkElementsCountInRawDataObjs(List<String[]> rawDataObjs) {
         for (String[] rawDataObj : rawDataObjs) {
             if (ICsvConsts.CSV_ROW_SIZE != rawDataObj.length) {
                 throw new IllegalArgumentException("Incorrect count of elements in : [%s]"
@@ -66,14 +68,14 @@ public final class CsvImporter {
         }
     }
 
-    private static List<String[]> getRawDataObjsWithoutHeader(List<String[]> rawDataObjs) {
+    private List<String[]> getRawDataObjsWithoutHeader(List<String[]> rawDataObjs) {
         String[] header = rawDataObjs.get(0);
         return Arrays.equals(header, ICsvConsts.CSV_HEADER)
                 ? rawDataObjs.subList(1, rawDataObjs.size())
                 : rawDataObjs;
     }
 
-    private static AbstractVehicle convertToDataObj(String[] rawDataObj) {
+    private AbstractVehicle convertToDataObj(String[] rawDataObj) {
         String type = rawDataObj[ICsvConsts.TYPE_IDX];
         VehicleType vehicleType = VehicleType.getVehicleType(type);
         if (vehicleType == null) {
@@ -122,8 +124,5 @@ public final class CsvImporter {
         }
 
         return dataObj;
-    }
-
-    private CsvImporter() {
     }
 }
