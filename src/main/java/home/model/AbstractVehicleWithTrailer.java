@@ -1,8 +1,11 @@
-package home.models;
+package home.model;
 
 import java.util.Objects;
 
-public abstract class AbstractVehicleWithTrailer extends AbstractVehicle {
+public abstract sealed class AbstractVehicleWithTrailer
+        extends AbstractVehicle permits Car,Truck {
+
+    private static final long serialVersionUID = 5771617467340614253L;
 
     private boolean hasTrailer;
 

@@ -12,9 +12,9 @@ import home.gui.component.dialog.AbstractDialog;
 import home.gui.component.dialog.DialogCar;
 import home.gui.component.dialog.DialogMotorcycle;
 import home.gui.component.dialog.DialogTruck;
-import home.models.AbstractVehicle;
-import home.models.VehicleType;
-import home.utils.Utils;
+import home.model.AbstractVehicle;
+import home.model.VehicleType;
+import home.utils.LogUtils;
 
 public final class DialogCaller {
 
@@ -28,25 +28,13 @@ public final class DialogCaller {
             AbstractVehicle dataObj, int tblRowOfSelectedDataObj) {
         Class<T> dialogClass = null;
         VehicleType objType = dataObj.getType();
-        switch (objType) {
-        case CAR:
-            dialogClass = (Class<T>) DialogCar.class;
-            break;
 
-        case TRUCK:
-            dialogClass = (Class<T>) DialogTruck.class;
-            break;
+        dialogClass = switch (objType) {
+            case CAR -> (Class<T>) DialogCar.class;
+            case TRUCK -> (Class<T>) DialogTruck.class;
+            case MOTORCYCLE -> (Class<T>) DialogMotorcycle.class;
+        };
 
-        case MOTORCYCLE:
-            dialogClass = (Class<T>) DialogMotorcycle.class;
-            break;
-
-        default:
-            Utils.logAndShowError(LOG, frame,
-                    "There is no dialog for [" + objType + "] object type",
-                    "Object type error", new IllegalArgumentException("DataObj type error"));
-            return;
-        }
         showObjDialog(frame, dialogClass, dataObj, tblRowOfSelectedDataObj);
     }
 
@@ -65,7 +53,7 @@ public final class DialogCaller {
                     dataObj, tblRowOfSelectedDataObj);
             blankDialog.buildDialog();
         } catch (Exception e) {
-            Utils.logAndShowError(LOG, frame,
+            LogUtils.logAndShowError(LOG, frame,
                     "Dialog window creation error.\n" + e.getLocalizedMessage(),
                     "Dialog error", e);
             return;

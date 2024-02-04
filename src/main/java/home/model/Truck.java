@@ -1,8 +1,10 @@
-package home.models;
+package home.model;
 
 import java.util.Objects;
 
 public final class Truck extends AbstractVehicleWithTrailer {
+
+    private static final long serialVersionUID = -6141015683953451281L;
 
     private boolean isTransportsCargo;
 

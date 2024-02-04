@@ -1,15 +1,19 @@
-package home.models;
+package home.model;
 
+import java.io.Serializable;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.Objects;
 import java.util.TimeZone;
 
-public abstract class AbstractVehicle {
+public abstract sealed class AbstractVehicle
+        implements Serializable permits AbstractVehicleWithTrailer,Motorcycle {
 
-    private static final char BS = ' ';
+    private static final long serialVersionUID = 4228103618146673801L;
 
-    private long id;
+    private static final char SPACE = ' ';
+
+    private transient long id; // transient for work save mechanism with *.ser, *.bser
     private VehicleType type;
     private String color;
     private String number;
@@ -100,15 +104,15 @@ public abstract class AbstractVehicle {
         var sb = new StringBuilder();
         sb.append("Vehicle");
         if (id != 0) {
-            sb.append(BS).append("[id=").append(id).append(']');
+            sb.append(SPACE).append("[id=").append(id).append(']');
         }
-        sb.append(BS).append(':').append(BS).append(color).append(BS).append(type)
-                .append(BS).append("with number").append(BS).append(number);
+        sb.append(SPACE).append(':').append(SPACE).append(color).append(SPACE).append(type)
+                .append(SPACE).append("with number").append(SPACE).append(number);
 
         LocalDateTime time = LocalDateTime.ofInstant(Instant.ofEpochMilli(dateTime),
                 TimeZone.getDefault().toZoneId());
 
-        sb.append(BS).append('(').append(time).append(')');
+        sb.append(SPACE).append('(').append(time).append(')');
 
         return sb.toString();
     }

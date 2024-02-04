@@ -62,40 +62,32 @@ public final class CustomJPanel extends JPanel {
     private void setPanelParams(PanelType panelType) {
         String panelName = panelType.name();
         switch (panelType) {
-        case FRAME_TABLE_PANEL:
-            setPanelParams(panelName,
+            case FRAME_TABLE_PANEL -> setPanelParams(panelName,
                     FRAME_TBL_PANEL_PREF_WIDTH, FRAME_TBL_PANEL_PREF_HEIGHT,
                     FRAME_TBL_PANEL_MIN_WIDTH, FRAME_TBL_PANEL_MIN_HEIGHT,
                     new BorderLayout(FRAME_TBL_PANEL_BORDER_LAYOUT_GAP,
                             FRAME_TBL_PANEL_BORDER_LAYOUT_GAP));
-            break;
 
-        case FRAME_BUTTON_PANEL:
-            setPanelParams(panelName,
+            case FRAME_BUTTON_PANEL -> setPanelParams(panelName,
                     FRAME_BTN_PANEL_PREF_WIDTH, FRAME_BTN_PANEL_PREF_HEIGHT,
                     FRAME_BTN_PANEL_MIN_WIDTH, FRAME_BTN_PANEL_MIN_HEIGHT,
                     new GridLayout(FRAME_BTN_PANEL_GRID_LAYOUT_ROWS,
                             FRAME_BTN_PANEL_GRID_LAYOUT_COLUMNS,
                             FRAME_BTN_PANEL_GRID_LAYOUT_GAP,
                             FRAME_BTN_PANEL_GRID_LAYOUT_GAP));
-            break;
 
-        case DIALOG_TEXT_FIELDS_PANEL:
-            setPanelParams(panelName,
+            case DIALOG_TEXT_FIELDS_PANEL -> setPanelParams(panelName,
                     DIALOG_TXT_FIELDS_PANEL_WIDTH, DIALOG_TXT_FIELDS_PANEL_HEIGHT,
                     new GridLayout(DIALOG_TXT_FIELDS_PANEL_GRID_LAYOUT_ROWS,
                             DIALOG_TXT_FIELDS_PANEL_GRID_LAYOUT_COLUMNS,
                             DIALOG_TXT_FIELDS_PANEL_GRID_LAYOUT_GAP,
                             DIALOG_TXT_FIELDS_PANEL_GRID_LAYOUT_GAP));
-            break;
 
-        case DIALOG_BUTTON_PANEL:
-            setPanelParams(panelName,
+            case DIALOG_BUTTON_PANEL -> setPanelParams(panelName,
                     DIALOG_BTN_PANEL_WIDTH, DIALOG_BTN_PANEL_HEIGHT,
                     new FlowLayout(FlowLayout.CENTER,
                             DIALOG_BTN_PANEL_FLOW_LAYOUT_H_GAP,
                             DIALOG_BTN_PANEL_FLOW_LAYOUT_V_GAP));
-            break;
         }
     }
 

@@ -1,4 +1,4 @@
-package home.models;
+package home.model;
 
 public enum VehicleType {
 
@@ -24,5 +24,14 @@ public enum VehicleType {
             }
         }
         return null;
+    }
+
+    public boolean in(VehicleType... vehicleTypes) {
+        for (var vehicleType : vehicleTypes) {
+            if (this == vehicleType) {
+                return true;
+            }
+        }
+        return false;
     }
 }

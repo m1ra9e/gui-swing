@@ -1,0 +1,23 @@
+{
+  "vehicles" : [ {
+    "type" : "motorcycle",
+    "color" : "black",
+    "number" : "1a",
+    "date" : "2020.01.23 | 10:00:00",
+    "has_cradle" : "false"
+  }, {
+    "type" : "car",
+    "color" : "yellow",
+    "number" : "22b",
+    "date" : "2021.02.24 | 11:01:27",
+    "has_trailer" : "false",
+    "is_transports_passengers" : "true"
+  }, {
+    "type" : "truck",
+    "color" : "green",
+    "number" : "333c",
+    "date" : "2022.03.25 | 12:02:11",
+    "has_trailer" : "true",
+    "is_transports_cargo" : "false"
+  } ]
+}

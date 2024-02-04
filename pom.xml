@@ -10,7 +10,7 @@
 
     <groupId>home</groupId>
     <artifactId>vehicle</artifactId>
-    <version>4.0.0</version>
+    <version>5.0.0</version>
 
     <packaging>jar</packaging>
 
@@ -29,6 +29,21 @@
             <groupId>org.xerial</groupId>
             <artifactId>sqlite-jdbc</artifactId>
             <version>3.34.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.yaml</groupId>
+            <artifactId>snakeyaml</artifactId>
+            <version>1.30</version>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+            <version>2.13.3</version>
+        </dependency>
+        <dependency>
+            <groupId>com.opencsv</groupId>
+            <artifactId>opencsv</artifactId>
+            <version>5.6</version>
         </dependency>
         <dependency>
             <groupId>org.swinglabs.swingx</groupId>
@@ -96,4 +111,5 @@
             </plugin>
         </plugins>
     </build>
+
 </project>
