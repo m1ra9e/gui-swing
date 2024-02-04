@@ -1,0 +1,4 @@
+type,color,number,date,has_trailer,is_transports_passengers,is_transports_cargo,has_cradle
+motorcycle,black,1a,2020.01.23 | 10:00:00,false,false,false,false
+car,yellow,22b,2021.02.24 | 11:01:27,false,true,false,false
+truck,green,333c,2022.03.25 | 12:02:11,true,false,false,false

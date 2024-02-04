@@ -1,8 +1,10 @@
-package home.models;
+package home.model;
 
 import java.util.Objects;
 
 public final class Motorcycle extends AbstractVehicle {
+
+    private static final long serialVersionUID = 4323155472149566955L;
 
     private boolean hasCradle;
 

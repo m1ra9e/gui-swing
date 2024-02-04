@@ -14,37 +14,37 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import home.IConsts;
 import home.Storage;
-import home.models.AbstractVehicle;
-import home.models.Car;
-import home.models.Motorcycle;
-import home.models.Truck;
-import home.models.VehicleType;
-import home.utils.Utils;
+import home.model.AbstractVehicle;
+import home.model.Car;
+import home.model.Motorcycle;
+import home.model.Truck;
+import home.model.VehicleType;
+import home.utils.LogUtils;
 
-abstract class AbstractDao implements IDao {
-
-    private static final Logger LOG = LoggerFactory.getLogger(AbstractDao.class);
+abstract sealed class AbstractDao implements IDao permits DaoSQLite {
 
     private static final String SELECT_ALL = "SELECT * FROM vehicle;";
 
     private static final String SELECT_ONE = "SELECT * FROM vehicle WHERE id = ?;";
 
-    private static final String INSERT = "INSERT INTO vehicle"
-            + " ('type', 'color', 'number', 'date_time', 'is_transports_cargo',"
-            + " 'is_transports_passengers', 'has_trailer', 'has_cradle')"
-            + " VALUES (?, ?, ?, ?, ?, ?, ?, ?);";
+    private static final String INSERT = """
+            INSERT INTO vehicle
+            ('type', 'color', 'number', 'date_time', 'is_transports_cargo',
+            'is_transports_passengers', 'has_trailer', 'has_cradle')
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?);""";
 
-    private static final String UPDATE = "UPDATE vehicle"
-            + " SET type = ?, color = ?, number = ?, date_time = ?,"
-            + " is_transports_cargo = ?, is_transports_passengers = ?,"
-            + " has_trailer = ?, has_cradle = ?"
-            + " WHERE id = ?;";
+    private static final String UPDATE = """
+            UPDATE vehicle SET
+            type = ?, color = ?, number = ?, date_time = ?, is_transports_cargo = ?,
+            is_transports_passengers = ?, has_trailer = ?, has_cradle = ?
+            WHERE id = ?;""";
 
     private static final String DELETE = "DELETE FROM vehicle WHERE id in (%s);";
+
+    private static final String CONNECTION_ERROR_CODE = "08";
 
     protected AbstractDao() {
     }
@@ -58,7 +58,6 @@ abstract class AbstractDao implements IDao {
     @Override
     public AbstractVehicle readOne(long id) throws SQLException {
         try (var conn = getConnection()) {
-            conn.setAutoCommit(false);
             conn.setTransactionIsolation(getTransactionIsolation());
 
             try (var pstmt = conn.prepareStatement(SELECT_ONE)) {
@@ -69,8 +68,6 @@ abstract class AbstractDao implements IDao {
                     while (res.next()) {
                         dataObjs.add(convertResultToDataObj(res));
                     }
-                    conn.commit();
-                    conn.setAutoCommit(true);
                 }
 
                 if (dataObjs.size() > 1) {
@@ -84,9 +81,8 @@ abstract class AbstractDao implements IDao {
     }
 
     @Override
-    public ArrayList<AbstractVehicle> readAll() throws SQLException {
+    public List<AbstractVehicle> readAll() throws SQLException {
         try (var conn = getConnection()) {
-            conn.setAutoCommit(false);
             conn.setTransactionIsolation(getTransactionIsolation());
             try (var stmt = conn.createStatement();
                     var res = stmt.executeQuery(SELECT_ALL)) {
@@ -94,60 +90,53 @@ abstract class AbstractDao implements IDao {
                 while (res.next()) {
                     dataObjs.add(convertResultToDataObj(res));
                 }
-                conn.commit();
-                conn.setAutoCommit(true);
                 return dataObjs;
             }
         }
     }
 
     private AbstractVehicle convertResultToDataObj(ResultSet res) throws SQLException {
-        String type = res.getString(DaoConsts.TYPE);
+        String type = res.getString(IDaoConsts.TYPE);
         VehicleType vehicleType = VehicleType.getVehicleType(type);
         if (vehicleType == null) {
             throw new SQLException("Wrong vehicle type received : " + type);
         }
 
-        AbstractVehicle vehicle = null;
-        switch (vehicleType) {
-        case CAR:
-            vehicle = new Car();
-            var car = ((Car) vehicle);
-            car.setTransportsPassengers(convertToBoolean(res.getInt(DaoConsts.IS_TRANSPORTS_PASSENGERS)));
-            car.setHasTrailer(convertToBoolean(res.getInt(DaoConsts.HAS_TRAILER)));
-            break;
+        AbstractVehicle vehicle = switch (vehicleType) {
+            case CAR -> {
+                var car = new Car();
+                car.setTransportsPassengers(convertToBoolean(res.getInt(IDaoConsts.IS_TRANSPORTS_PASSENGERS)));
+                car.setHasTrailer(convertToBoolean(res.getInt(IDaoConsts.HAS_TRAILER)));
+                yield car;
+            }
+            case TRUCK -> {
+                var truck = new Truck();
+                truck.setTransportsCargo(convertToBoolean(res.getInt(IDaoConsts.IS_TRANSPORTS_CARGO)));
+                truck.setHasTrailer(convertToBoolean(res.getInt(IDaoConsts.HAS_TRAILER)));
+                yield truck;
+            }
+            case MOTORCYCLE -> {
+                var motorcycle = new Motorcycle();
+                motorcycle.setHasCradle(convertToBoolean(res.getInt(IDaoConsts.HAS_CRADLE)));
+                yield motorcycle;
+            }
+        };
 
-        case TRUCK:
-            vehicle = new Truck();
-            var truck = ((Truck) vehicle);
-            truck.setTransportsCargo(convertToBoolean(res.getInt(DaoConsts.IS_TRANSPORTS_CARGO)));
-            truck.setHasTrailer(convertToBoolean(res.getInt(DaoConsts.HAS_TRAILER)));
-            break;
-
-        case MOTORCYCLE:
-            vehicle = new Motorcycle();
-            ((Motorcycle) vehicle).setHasCradle(convertToBoolean(res.getInt(DaoConsts.HAS_CRADLE)));
-            break;
-        }
-
-        vehicle.setId(res.getLong(DaoConsts.ID));
-        vehicle.setColor(res.getString(DaoConsts.COLOR));
-        vehicle.setNumber(res.getString(DaoConsts.NUMBER));
-        vehicle.setDateTime(res.getLong(DaoConsts.DATE_TIME));
+        vehicle.setId(res.getLong(IDaoConsts.ID));
+        vehicle.setColor(res.getString(IDaoConsts.COLOR));
+        vehicle.setNumber(res.getString(IDaoConsts.NUMBER));
+        vehicle.setDateTime(res.getLong(IDaoConsts.DATE_TIME));
 
         return vehicle;
     }
 
     private boolean convertToBoolean(int intBoolean) throws SQLException {
-        switch (intBoolean) {
-        case 0:
-            return false;
-        case 1:
-            return true;
-        default:
-            throw new SQLException("Invalid value received for boolean variable: "
+        return switch (intBoolean) {
+            case 0 -> false;
+            case 1 -> true;
+            default -> throw new SQLException("Invalid value received for boolean variable: "
                     + intBoolean);
-        }
+        };
     }
 
     @Override
@@ -203,15 +192,16 @@ abstract class AbstractDao implements IDao {
     }
 
     private void insert(List<AbstractVehicle> dataObjs) {
-        sqlOperationBatch(INSERT, dataObjs, "The information has not been added to the database: %s");
+        sqlOperationBatch(false, dataObjs, "The information has not been added to the database: %s");
     }
 
     private void update(List<AbstractVehicle> dataObjs) {
-        sqlOperationBatch(UPDATE, dataObjs, "The information in the database has not been updated: %s");
+        sqlOperationBatch(true, dataObjs, "The information in the database has not been updated: %s");
     }
 
-    private void sqlOperationBatch(String sql, List<AbstractVehicle> dataObjs, String errorMsg) {
-        boolean isUpdateOperation = UPDATE.equals(sql);
+    private void sqlOperationBatch(boolean isUpdateOperation,
+            List<AbstractVehicle> dataObjs, String errorMsg) {
+        String sql = isUpdateOperation ? UPDATE : INSERT;
 
         try (var conn = getConnection()) {
             conn.setAutoCommit(false);
@@ -224,8 +214,8 @@ abstract class AbstractDao implements IDao {
                     pstmt.addBatch();
                     operationsCount++;
 
-                    // Execute every 1000 items.
-                    if (operationsCount % 1000 == 0 || operationsCount == dataObjs.size()) {
+                    // Execute every 1_000 items.
+                    if (operationsCount % 1_000 == 0 || operationsCount == dataObjs.size()) {
                         checkBatchExecution(pstmt.executeBatch(),
                                 String.format(errorMsg, dataObj), getLogger());
                         conn.commit();
@@ -234,15 +224,19 @@ abstract class AbstractDao implements IDao {
                 conn.setAutoCommit(true);
             } catch (SQLException e) {
                 String error = String.format(errorMsg, IConsts.EMPTY_STRING);
+
+                checkConnectionState(e, error);
+
                 rollbackAndLog(conn, e, error);
-                sqlOperationOneByOne(sql, dataObjs, error);
+                sqlOperationOneByOne(conn, sql, dataObjs, isUpdateOperation, error);
             }
         } catch (SQLException e) {
-            throw new IllegalStateException("Sql INSERT/UPDATE operation error : ", e);
+            String operationType = isUpdateOperation ? "UPDATE" : "INSERT";
+            throw new IllegalStateException("Sql " + operationType + " operation error : ", e);
         }
     }
 
-    private void checkBatchExecution(int[] batchResults, String errorMsg, Logger log)
+    void checkBatchExecution(int[] batchResults, String errorMsg, Logger log)
             throws SQLException {
         if (batchResults == null) {
             log.warn("Batch execution result is null.\n Check! \n Maybe " + errorMsg);
@@ -261,56 +255,51 @@ abstract class AbstractDao implements IDao {
 
             if (Statement.EXECUTE_FAILED == batchResult) {
                 msg.append("result code 'EXECUTE_FAILED' was received.");
-                throw Utils.logAndCreateSqlException(msg.toString(), log);
+                throw LogUtils.logAndCreateSqlException(msg.toString(), log);
             }
 
             msg.append("unknown result code '")
                     .append(batchResult).append("' was received.");
-            throw Utils.logAndCreateSqlException(msg.toString(), log);
+            throw LogUtils.logAndCreateSqlException(msg.toString(), log);
         }
-
-        // TODO Perhaps the above logic should be replaced by this. Think about it.
-//        if (batchResults != null && Arrays.stream(batchResults)
-//                .anyMatch(batchResult -> batchResult < 1 && Statement.SUCCESS_NO_INFO != batchResult)) {
-//            throw Utils.logAndCreateSqlException("Batch execution error: " + errorMsg, log);
-//        }
     }
 
     private void rollbackAndLog(Connection conn, Exception e, String errorMsg) {
-        LOG.error(errorMsg, e);
+        getLogger().error(errorMsg, e);
         try {
             conn.rollback();
         } catch (SQLException ex) {
-            throw Utils.logAndCreateIllegalStateException(
-                    errorMsg + " Sql rollback error.", LOG, e);
+            throw LogUtils.logAndCreateIllegalStateException(
+                    errorMsg + " Sql rollback error.", getLogger(), e);
         }
     }
 
-    private void sqlOperationOneByOne(String sql, List<AbstractVehicle> dataObjs, String errorMsg)
+    private void checkConnectionState(SQLException e, String errorMsg) throws SQLException {
+        String sqlState = e.getSQLState();
+        if (sqlState.startsWith(CONNECTION_ERROR_CODE)) {
+            throw LogUtils.logAndCreateSqlException(
+                    "%s:\nConnection error (code %s)".formatted(errorMsg, sqlState), getLogger(), e);
+        }
+    }
+
+    private void sqlOperationOneByOne(Connection conn, String sql,
+            List<AbstractVehicle> dataObjs, boolean isUpdateOperation, String errorMsg)
             throws SQLException {
-        boolean isUpdateOperation = UPDATE.equals(sql);
         String operationType = isUpdateOperation ? "update" : "insert";
 
         Exception mainExeption = null;
         var errorsWithDataObjs = new ArrayList<String>();
 
-        try (var conn = getConnection()) {
-            conn.setAutoCommit(false);
-            conn.setTransactionIsolation(getTransactionIsolation());
-
-            for (AbstractVehicle dataObj : dataObjs) {
-                try (var pstmt = conn.prepareStatement(sql)) {
-                    fillStmtByDataFromObj(pstmt, dataObj, isUpdateOperation);
-                    pstmt.execute();
-                    conn.commit();
-                } catch (SQLException e) {
-                    mainExeption = addException(mainExeption, e,
-                            "Exception in %s mechanism one by one.".formatted(operationType));
-                    errorsWithDataObjs.add(dataObj.toString() + "\n\t(" + e.getMessage() + ')');
-                }
+        conn.setAutoCommit(true);
+        for (AbstractVehicle dataObj : dataObjs) {
+            try (var pstmt = conn.prepareStatement(sql)) {
+                fillStmtByDataFromObj(pstmt, dataObj, isUpdateOperation);
+                pstmt.execute();
+            } catch (SQLException e) {
+                mainExeption = addException(mainExeption, e,
+                        "Exception in %s mechanism one by one.".formatted(operationType));
+                errorsWithDataObjs.add(dataObj.toString() + "\n\t(" + e.getMessage() + ')');
             }
-
-            conn.setAutoCommit(true);
         }
 
         if (!errorsWithDataObjs.isEmpty()) {
@@ -318,7 +307,7 @@ abstract class AbstractDao implements IDao {
             sb.append(errorMsg).append(" Can't ").append(operationType)
                     .append(":\n").append(String.join("\n", errorsWithDataObjs));
 
-            throw Utils.logAndCreateSqlException(sb.toString(), LOG, mainExeption);
+            throw LogUtils.logAndCreateSqlException(sb.toString(), getLogger(), mainExeption);
         }
     }
 
@@ -332,21 +321,21 @@ abstract class AbstractDao implements IDao {
         pstmt.setLong(4, dataObj.getDateTime());
 
         switch (dataObjType) {
-        case CAR:
-            Car car = (Car) dataObj;
-            pstmt.setInt(6, convertToInt(car.isTransportsPassengers()));
-            pstmt.setInt(7, convertToInt(car.hasTrailer()));
-            break;
+            case CAR:
+                Car car = (Car) dataObj;
+                pstmt.setInt(6, convertToInt(car.isTransportsPassengers()));
+                pstmt.setInt(7, convertToInt(car.hasTrailer()));
+                break;
 
-        case TRUCK:
-            Truck truck = (Truck) dataObj;
-            pstmt.setInt(5, convertToInt(truck.isTransportsCargo()));
-            pstmt.setInt(7, convertToInt(truck.hasTrailer()));
-            break;
+            case TRUCK:
+                Truck truck = (Truck) dataObj;
+                pstmt.setInt(5, convertToInt(truck.isTransportsCargo()));
+                pstmt.setInt(7, convertToInt(truck.hasTrailer()));
+                break;
 
-        case MOTORCYCLE:
-            pstmt.setInt(8, convertToInt(((Motorcycle) dataObj).hasCradle()));
-            break;
+            case MOTORCYCLE:
+                pstmt.setInt(8, convertToInt(((Motorcycle) dataObj).hasCradle()));
+                break;
         }
 
         if (isUpdateOperation) {
@@ -372,61 +361,36 @@ abstract class AbstractDao implements IDao {
                 conn.commit();
                 conn.setAutoCommit(true);
             } catch (SQLException e) {
-                rollbackAndLog(conn, e, "Error while removal several rows in one query.");
-                deleteOneByOne(ids);
+                String errorMsg = "Error while removal several rows in one query";
+
+                checkConnectionState(e, errorMsg);
+
+                rollbackAndLog(conn, e, errorMsg);
+                deleteOneByOne(conn, ids);
             }
         } catch (SQLException e) {
             throw new IllegalStateException("Sql DELETE operation error : ", e);
         }
     }
 
-//    private void delete(Long[] ids) throws SQLException {
-//        String placeHolders = "?,".repeat(ids.length);
-//        String sql = String.format(DELETE, placeHolders.substring(0, placeHolders.length() - 1));
-//        try (var conn = getConnection()) {
-//            conn.setAutoCommit(false);
-//            conn.setTransactionIsolation(getTransactionIsolation());
-//            try (var pstmt = conn.prepareStatement(sql)) {
-//                for (int i = 0; i < ids.length; i++) {
-//                    pstmt.setLong(i + 1, ids[i]);
-//                }
-//                if (pstmt.executeUpdate() <= 0) {
-//                    throw new SQLException("Information has not been deleted from the database."
-//                            + "\n Id list for delete: " + Arrays.toString(ids));
-//                }
-//                conn.commit();
-//                conn.setAutoCommit(true);
-//            } catch (SQLException e) {
-//                rollbackAndLog(conn, e, "Error while removal several rows in one query.");
-//                deleteOneByOne(ids);
-//            }
-//        }
-//    }
-
-    private void deleteOneByOne(Long[] ids) throws SQLException {
+    private void deleteOneByOne(Connection conn, Long[] ids) throws SQLException {
         Exception mainExeption = null;
         var errorsWithIds = new ArrayList<String>();
 
+        conn.setAutoCommit(true);
         String sql = String.format(DELETE, "?");
-        try (var conn = getConnection()) {
-            conn.setAutoCommit(false);
-            conn.setTransactionIsolation(getTransactionIsolation());
 
-            for (Long id : ids) {
-                try (var pstmt = conn.prepareStatement(sql)) {
-                    pstmt.setLong(1, id);
-                    if (pstmt.executeUpdate() <= 0) {
-                        errorsWithIds.add(id + IConsts.EMPTY_STRING);
-                    }
-                    conn.commit();
-                } catch (SQLException e) {
-                    mainExeption = addException(mainExeption, e,
-                            "Exception in delete mechanism one by one.");
-                    errorsWithIds.add(id + "\n\t(" + e.getMessage() + ')');
+        for (Long id : ids) {
+            try (var pstmt = conn.prepareStatement(sql)) {
+                pstmt.setLong(1, id);
+                if (pstmt.executeUpdate() <= 0) {
+                    errorsWithIds.add(id + IConsts.EMPTY_STRING);
                 }
+            } catch (SQLException e) {
+                mainExeption = addException(mainExeption, e,
+                        "Exception in delete mechanism one by one.");
+                errorsWithIds.add(id + "\n\t(" + e.getMessage() + ')');
             }
-
-            conn.setAutoCommit(true);
         }
 
         if (!errorsWithIds.isEmpty()) {
@@ -435,7 +399,7 @@ abstract class AbstractDao implements IDao {
                     .append("\nCan't delete objects with ids:\n")
                     .append(String.join("\n", errorsWithIds));
 
-            throw Utils.logAndCreateSqlException(sb.toString(), LOG, mainExeption);
+            throw LogUtils.logAndCreateSqlException(sb.toString(), getLogger(), mainExeption);
         }
     }
 

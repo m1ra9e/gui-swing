@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<vehicles>
+    <vehicle type="MOTORCYCLE">
+        <color>black</color>
+        <number>1a</number>
+        <date>2020.01.23 | 10:00:00</date>
+        <has_cradle>false</has_cradle>
+    </vehicle>
+    <vehicle type="CAR">
+        <color>yellow</color>
+        <number>22b</number>
+        <date>2021.02.24 | 11:01:27</date>
+        <has_trailer>false</has_trailer>
+        <is_transports_passengers>true</is_transports_passengers>
+    </vehicle>
+    <vehicle type="TRUCK">
+        <color>green</color>
+        <number>333c</number>
+        <date>2022.03.25 | 12:02:11</date>
+        <has_trailer>true</has_trailer>
+        <is_transports_cargo>false</is_transports_cargo>
+    </vehicle>
+</vehicles>

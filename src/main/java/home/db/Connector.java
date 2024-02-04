@@ -12,7 +12,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import home.Settings;
-import home.utils.Utils;
+import home.utils.LogUtils;
 
 public final class Connector {
 
@@ -70,9 +70,9 @@ public final class Connector {
 
             return DriverManager.getConnection(url, props);
         } catch (ClassNotFoundException e) {
-            throw Utils.logAndCreateSqlException("Database driver class not found.", LOG, e);
+            throw LogUtils.logAndCreateSqlException("Database driver class not found.", LOG, e);
         } catch (SQLException e) {
-            throw Utils.logAndCreateSqlException("Error while connecting to the database.", LOG, e);
+            throw LogUtils.logAndCreateSqlException("Error while connecting to the database.", LOG, e);
         }
     }
 

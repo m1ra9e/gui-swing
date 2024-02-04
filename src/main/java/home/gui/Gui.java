@@ -1,13 +1,10 @@
 package home.gui;
 
 import java.awt.BorderLayout;
-import java.awt.Component;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.io.IOException;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -23,6 +20,7 @@ import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
+import javax.swing.JSeparator;
 import javax.swing.JTable;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
@@ -35,11 +33,8 @@ import home.Main;
 import home.Settings;
 import home.Settings.Setting;
 import home.Storage;
-import home.db.DbInitializer;
-import home.db.dao.DaoSQLite;
 import home.gui.component.CustomJButton;
-import home.gui.component.CustomJFileChooser;
-import home.gui.component.CustomJFileChooser.ChooserOperation;
+import home.gui.component.CustomJFileChooserImpExp.DataFormat;
 import home.gui.component.CustomJFrame;
 import home.gui.component.CustomJPanel;
 import home.gui.component.CustomJPanel.PanelType;
@@ -47,10 +42,12 @@ import home.gui.component.CustomJTable;
 import home.gui.component.dialog.DialogCar;
 import home.gui.component.dialog.DialogMotorcycle;
 import home.gui.component.dialog.DialogTruck;
-import home.gui.exception.SaveAsCancelException;
-import home.gui.exception.SaveAsToSameFileException;
-import home.models.AbstractVehicle;
-import home.utils.Utils;
+import home.gui.listener.CreateOrOpenActionListener;
+import home.gui.listener.ExportImportActionListener;
+import home.gui.listener.SaveActionListener;
+import home.model.AbstractVehicle;
+import home.utils.ThreadUtil;
+import home.utils.LogUtils;
 
 public enum Gui {
 
@@ -106,7 +103,7 @@ public enum Gui {
                 UIManager.setLookAndFeel(UIManager.getCrossPlatformLookAndFeelClassName());
                 Settings.writeSetting(Setting.STYLE,
                         ColorSchema.CROSSPLATFORM.name().toLowerCase(Locale.ROOT));
-                Utils.logAndShowError(LOG, frame,
+                LogUtils.logAndShowError(LOG, frame,
                         "Error while set the system color scheme.\n"
                                 + ColorSchema.CROSSPLATFORM.getNameForGui()
                                 + " color scheme will be used.\nError: "
@@ -114,7 +111,7 @@ public enum Gui {
                         "System color scheme error", e);
             } catch (Exception ex) {
                 JFrame.setDefaultLookAndFeelDecorated(true);
-                Utils.logAndShowError(LOG, frame,
+                LogUtils.logAndShowError(LOG, frame,
                         "Error while set Default color scheme.\nError: " + ex.getMessage(),
                         "System color scheme error", ex);
             }
@@ -158,14 +155,14 @@ public enum Gui {
 
         btnDelete = CustomJButton.create(IGuiConsts.DELETE);
         btnDelete.addActionListener(actionEvent -> {
-            Utils.runInThread("-> delete from storage", () -> {
-                List<AbstractVehicle> obsMarkedForDelete = Storage.INSTANCE
+            ThreadUtil.runInThread(() -> {
+                Thread.currentThread().setName("-> delete from storage");
+                List<AbstractVehicle> objsMarkedForDelete = Storage.INSTANCE
                         .getAll().stream()
                         .filter(dataObj -> dataObj.isMarkedForDelete())
                         .collect(Collectors.toList());
-                if (!obsMarkedForDelete.isEmpty()) {
-                    Storage.INSTANCE.deleteObjects(obsMarkedForDelete);
-                    Gui.INSTANCE.refreshTable();
+                if (!objsMarkedForDelete.isEmpty()) {
+                    DataActionInGui.delete(objsMarkedForDelete);
                 }
             });
         });
@@ -187,15 +184,21 @@ public enum Gui {
         menuBar = new JMenuBar();
 
         JMenuItem createOrOpenItem = createMenuItem(IGuiConsts.CREATE_OR_OPEN,
-                new CreateOrOpenActionListener(frame, dbLabel));
+                new CreateOrOpenActionListener(frame, dbLabel, LOG));
         JMenuItem saveItem = createMenuItem(IGuiConsts.SAVE,
-                new SaveActionListener(frame, dbLabel, false));
+                new SaveActionListener(frame, dbLabel, false, LOG));
         JMenuItem saveAsItem = createMenuItem(IGuiConsts.SAVE_AS,
-                new SaveActionListener(frame, dbLabel, true));
+                new SaveActionListener(frame, dbLabel, true, LOG));
+        JMenu importItem = createImportExportDropdownMenu(true);
+        JMenu exportItem = createImportExportDropdownMenu(false);
         var fileMenu = new JMenu(IGuiConsts.FILE);
         fileMenu.add(createOrOpenItem);
+        fileMenu.add(new JSeparator());
         fileMenu.add(saveItem);
         fileMenu.add(saveAsItem);
+        fileMenu.add(new JSeparator());
+        fileMenu.add(importItem);
+        fileMenu.add(exportItem);
         menuBar.add(fileMenu);
 
         menuBar.add(creatStyleMenu());
@@ -213,6 +216,15 @@ public enum Gui {
         var menuItem = new JMenuItem(name);
         menuItem.addActionListener(actionListener);
         return menuItem;
+    }
+
+    private JMenu createImportExportDropdownMenu(boolean isImport) {
+        var dropdownMenu = new JMenu(isImport ? IGuiConsts.IMPORT_FROM : IGuiConsts.EXPORT_TO);
+        for (DataFormat dataFormat : DataFormat.values()) {
+            dropdownMenu.add(createMenuItem(dataFormat.getExtension(),
+                    new ExportImportActionListener(dataFormat, isImport, frame, LOG)));
+        }
+        return dropdownMenu;
     }
 
     private JMenu creatStyleMenu() {
@@ -251,7 +263,7 @@ public enum Gui {
             setStyle(Settings.getStyle());
             SwingUtilities.updateComponentTreeUI(frame);
         } catch (Exception e) {
-            Utils.logAndShowError(LOG, frame,
+            LogUtils.logAndShowError(LOG, frame,
                     "Error while choosing style.", "Style error", e);
         }
     }
@@ -275,80 +287,5 @@ public enum Gui {
      */
     private void makeFrameVisible() {
         SwingUtilities.invokeLater(() -> frame.setVisible(true));
-    }
-
-    private static final class CreateOrOpenActionListener implements ActionListener {
-
-        private final Component parent;
-        private final JLabel dbLabel;
-
-        public CreateOrOpenActionListener(Component parent, JLabel dbLabel) {
-            this.parent = parent;
-            this.dbLabel = dbLabel;
-        }
-
-        @Override
-        public void actionPerformed(ActionEvent event) {
-            Utils.runInThread("-> create or open database", () -> {
-                try {
-                    CustomJFileChooser.showChooser(parent, ChooserOperation.CREATE_OR_OPEN);
-                    DbInitializer.createTableIfNotExists();
-                    Storage.INSTANCE.refresh(DaoSQLite.getInstance().readAll());
-                    dbLabel.setText(Settings.getDbFilePath());
-                } catch (IOException e) {
-                    Utils.logAndShowError(LOG, parent, "Error while create/open DB file.",
-                            "Create/Open file error.", e);
-                } catch (SQLException e) {
-                    Utils.logAndShowError(LOG, parent,
-                            "Error while read selected DB file.\n" + e.getLocalizedMessage(),
-                            "Read selected DB error", e);
-                }
-            });
-        }
-    }
-
-    private static final class SaveActionListener implements ActionListener {
-
-        private final Component parent;
-        private final JLabel dbLabel;
-        private final boolean isSaveAs;
-
-        public SaveActionListener(Component parent, JLabel dbLabel, boolean isSaveAs) {
-            this.parent = parent;
-            this.dbLabel = dbLabel;
-            this.isSaveAs = isSaveAs;
-        }
-
-        @Override
-        public void actionPerformed(ActionEvent event) {
-            Utils.runInThread("-> save changes to database", () -> {
-                try {
-                    if (isSaveAs) {
-                        try {
-                            CustomJFileChooser.showChooser(parent, ChooserOperation.SAVE_AS);
-                            DbInitializer.createTableIfNotExists();
-                            DaoSQLite.getInstance().saveAs();
-                        } catch (SaveAsToSameFileException e) {
-                            DaoSQLite.getInstance().saveAllChanges();
-                        } catch (SaveAsCancelException e) {
-                            // to do nothing
-                        }
-                    } else {
-                        DaoSQLite.getInstance().saveAllChanges();
-                    }
-                    Storage.INSTANCE.refresh(DaoSQLite.getInstance().readAll());
-                    dbLabel.setText(Settings.getDbFilePath());
-                    JOptionPane.showMessageDialog(parent, IGuiConsts.SAVE_TEXT,
-                            IGuiConsts.SAVE_TITLE, JOptionPane.INFORMATION_MESSAGE);
-                } catch (IOException e) {
-                    Utils.logAndShowError(LOG, parent, "Error while create/open DB file.",
-                            "Create/Open file error.", e);
-                } catch (SQLException e) {
-                    Utils.logAndShowError(LOG, parent,
-                            "Error while work with DB file.\n" + e.getMessage(),
-                            "Work with DB error", e);
-                }
-            });
-        }
     }
 }
