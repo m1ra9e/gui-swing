@@ -12,20 +12,19 @@ import javax.swing.SwingUtilities;
 
 import org.jdesktop.swingx.JXDatePicker;
 
-import home.Storage;
-import home.gui.Gui;
+import home.gui.DataActionInGui;
 import home.gui.IGuiConsts;
 import home.gui.component.CustomJButton;
-import home.gui.component.CustomJDialog;
 import home.gui.component.CustomJLabel;
 import home.gui.component.CustomJPanel;
 import home.gui.component.CustomJPanel.PanelType;
 import home.gui.component.CustomJTextField;
 import home.gui.component.CustomJXDatePicker;
-import home.models.AbstractVehicle;
+import home.model.AbstractVehicle;
 
 @SuppressWarnings("serial")
-public abstract class AbstractDialog extends CustomJDialog {
+public abstract sealed class AbstractDialog
+        extends AbstractCustomJDialog permits AbstractDialogTrailer,DialogMotorcycle {
 
     private static final int TEXT_FIELD_COLUMN_NUMBERS = 9;
 
@@ -94,8 +93,7 @@ public abstract class AbstractDialog extends CustomJDialog {
         btnSave.addActionListener(actionEvent -> {
             fillDataObj();
             if (checkObjFilling()) {
-                Storage.INSTANCE.updateStorage(dataObj, tblRowOfSelectedDataObj);
-                Gui.INSTANCE.refreshTable();
+                DataActionInGui.update(dataObj, tblRowOfSelectedDataObj);
                 dispose();
             }
         });

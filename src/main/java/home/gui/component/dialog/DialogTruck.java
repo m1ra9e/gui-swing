@@ -3,9 +3,9 @@ package home.gui.component.dialog;
 import javax.swing.JCheckBox;
 
 import home.gui.IGuiConsts;
-import home.models.AbstractVehicle;
-import home.models.Truck;
-import home.models.VehicleType;
+import home.model.AbstractVehicle;
+import home.model.Truck;
+import home.model.VehicleType;
 
 @SuppressWarnings("serial")
 public final class DialogTruck extends AbstractDialogTrailer {

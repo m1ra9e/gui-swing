@@ -1,15 +1,13 @@
 package home.gui.component;
 
-import java.time.Instant;
-import java.time.LocalDateTime;
 import java.util.List;
-import java.util.TimeZone;
 
 import javax.swing.table.AbstractTableModel;
 
 import home.IConsts;
 import home.gui.IGuiConsts;
-import home.models.AbstractVehicle;
+import home.model.AbstractVehicle;
+import home.utils.Utils;
 
 @SuppressWarnings("serial")
 final class CustomJTableDataModel extends AbstractTableModel {
@@ -46,21 +44,16 @@ final class CustomJTableDataModel extends AbstractTableModel {
     // 5 columns. Inside the method, we check the index and return
     // the corresponding column name.
     @Override
-    public String getColumnName(int column) {
-        switch (column) {
-        case TYPE_COL_IDX:
-            return IGuiConsts.TYPE;
-        case COLOR_COL_IDX:
-            return IGuiConsts.COLOR;
-        case NUMBER_COL_IDX:
-            return IGuiConsts.NUMBER;
-        case DATE_COL_IDX:
-            return IGuiConsts.DATE;
-        case DEL_MARK_COL_IDX:
-            return IGuiConsts.DELETION_MARK;
-        default:
-            return IConsts.EMPTY_STRING;
-        }
+    public String getColumnName(int columnIndex) {
+        String columnName = switch (columnIndex) {
+            case TYPE_COL_IDX -> IGuiConsts.TYPE;
+            case COLOR_COL_IDX -> IGuiConsts.COLOR;
+            case NUMBER_COL_IDX -> IGuiConsts.NUMBER;
+            case DATE_COL_IDX -> IGuiConsts.DATE;
+            case DEL_MARK_COL_IDX -> IGuiConsts.DELETION_MARK;
+            default -> IConsts.EMPTY_STRING;
+        };
+        return columnName;
     }
 
     // The method is responsible for what data in which cells of the JTable will
@@ -71,23 +64,17 @@ final class CustomJTableDataModel extends AbstractTableModel {
     @Override
     public Object getValueAt(int rowIndex, int columnIndex) {
         AbstractVehicle dataObj = dataObjs.get(rowIndex);
-        switch (columnIndex) {
-        case TYPE_COL_IDX:
-            return dataObj.getType();
-        case COLOR_COL_IDX:
-            return dataObj.getColor();
-        case NUMBER_COL_IDX:
-            return dataObj.getNumber();
-        case DATE_COL_IDX:
-            LocalDateTime dateTime = LocalDateTime.ofInstant(
-                    Instant.ofEpochMilli(dataObj.getDateTime()),
-                    TimeZone.getDefault().toZoneId());
-            return dateTime.format(IGuiConsts.DATE_FORMATTER);
-        case DEL_MARK_COL_IDX:
-            return dataObj.isMarkedForDelete();
-        default:
-            return IConsts.EMPTY_STRING;
-        }
+
+        Object cellValue = switch (columnIndex) {
+            case TYPE_COL_IDX -> dataObj.getType();
+            case COLOR_COL_IDX -> dataObj.getColor();
+            case NUMBER_COL_IDX -> dataObj.getNumber();
+            case DATE_COL_IDX -> Utils.getFormattedDate(dataObj.getDateTime());
+            case DEL_MARK_COL_IDX -> dataObj.isMarkedForDelete();
+            default -> IConsts.EMPTY_STRING;
+        };
+
+        return cellValue;
     }
 
     // For adding checkboxes to the second cell.

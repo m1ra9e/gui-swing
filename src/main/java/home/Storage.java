@@ -1,12 +1,11 @@
 package home;
 
-import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
-import home.gui.Gui;
-import home.models.AbstractVehicle;
+import home.model.AbstractVehicle;
 
 public enum Storage {
 
@@ -14,16 +13,19 @@ public enum Storage {
 
     public static final int NO_ROW_IS_SELECTED = -1;
 
-    private final List<AbstractVehicle> dataObjStorage = new ArrayList<>();
+    private final List<AbstractVehicle> dataObjStorage = new LinkedList<>();
     private final Set<Long> dataObjIdsForDelete = new HashSet<>();
     private final Set<Long> dataObjIdsForUpdate = new HashSet<>();
 
-    public void refresh(List<AbstractVehicle> dataObjs) {
+    public void initDataObjs(List<AbstractVehicle> dataObjs) {
         dataObjIdsForDelete.clear();
         dataObjIdsForUpdate.clear();
         dataObjStorage.clear();
         dataObjStorage.addAll(dataObjs);
-        Gui.INSTANCE.refreshTable();
+    }
+
+    public void addDataObj(List<AbstractVehicle> dataObjs) {
+        dataObjStorage.addAll(dataObjs);
     }
 
     public List<AbstractVehicle> getAll() {
@@ -43,7 +45,7 @@ public enum Storage {
         return dataObjIdsForUpdate;
     }
 
-    public void updateStorage(AbstractVehicle dataObj, int tblRowOfSelectedDataObj) {
+    public void updateDataObj(AbstractVehicle dataObj, int tblRowOfSelectedDataObj) {
         if (NO_ROW_IS_SELECTED == tblRowOfSelectedDataObj) {
             dataObjStorage.add(dataObj);
         } else {
@@ -52,7 +54,7 @@ public enum Storage {
         }
     }
 
-    public void deleteObjects(List<AbstractVehicle> obsMarkedForDelete) {
+    public void deleteDataObjs(List<AbstractVehicle> obsMarkedForDelete) {
         for (AbstractVehicle objForDel : obsMarkedForDelete) {
             long idObjForDel = objForDel.getId();
             if (idObjForDel > 0) {

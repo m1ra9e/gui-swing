@@ -19,8 +19,8 @@ import home.Settings;
 import home.Settings.Setting;
 import home.Storage;
 import home.db.dao.DaoSQLite;
-import home.models.AbstractVehicle;
-import home.models.Car;
+import home.model.AbstractVehicle;
+import home.model.Car;
 
 final class DbTest {
 
@@ -83,7 +83,7 @@ final class DbTest {
             createdDataObj.setDateTime(System.currentTimeMillis());
             createdDataObj.setTransportsPassengers(true);
 
-            Storage.INSTANCE.updateStorage(createdDataObj, Storage.NO_ROW_IS_SELECTED);
+            Storage.INSTANCE.updateDataObj(createdDataObj, Storage.NO_ROW_IS_SELECTED);
             DaoSQLite.getInstance().saveAllChanges();
 
             long id = 1;

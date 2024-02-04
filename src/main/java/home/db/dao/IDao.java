@@ -1,13 +1,13 @@
 package home.db.dao;
 
 import java.sql.SQLException;
-import java.util.ArrayList;
+import java.util.List;
 
-import home.models.AbstractVehicle;
+import home.model.AbstractVehicle;
 
-public interface IDao {
+public sealed interface IDao permits AbstractDao {
 
-    ArrayList<AbstractVehicle> readAll() throws SQLException;
+    List<AbstractVehicle> readAll() throws SQLException;
 
     @Deprecated(forRemoval = true) // because it uses only in test
     AbstractVehicle readOne(long id) throws SQLException;
