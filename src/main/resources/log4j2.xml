@@ -16,7 +16,8 @@
         </Console>
 
         <!-- File appender -->
-        <RollingFile name="fileLogger" 
+        <RollingFile name="fileLogger"
+            immediateFlush="false"
             fileName="${APP_LOG_ROOT}/app.log"
             filePattern="${APP_LOG_ROOT}/app-%d{yyyy-MM-dd}-%i.log">
             <PatternLayout pattern="${LOG_PATTERN}"/>
@@ -31,7 +32,7 @@
             <AppenderRef ref="consoleLogger" />
             <AppenderRef ref="fileLogger" />
         </Async>
-        
+
     </Appenders>
 
     <Loggers>

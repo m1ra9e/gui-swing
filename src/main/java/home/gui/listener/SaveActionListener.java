@@ -1,3 +1,18 @@
+/*******************************************************************************
+ * Copyright 2021-2024 Lenar Shamsutdinov
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *******************************************************************************/
 package home.gui.listener;
 
 import java.awt.Component;
@@ -12,16 +27,18 @@ import javax.swing.JOptionPane;
 import org.slf4j.Logger;
 
 import home.Settings;
-import home.db.DbInitializer;
-import home.db.dao.DaoSQLite;
+import home.db.dao.Dao;
+import home.db.init.DbInitializer;
 import home.gui.DataActionInGui;
-import home.gui.IGuiConsts;
+import home.gui.DbOperation;
+import home.gui.GuiConst;
 import home.gui.component.CustomJFileChooserDb;
-import home.gui.component.CustomJFileChooserDb.ChooserDbOperation;
+import home.gui.exception.CreateOpenSaveCancelException;
 import home.gui.exception.SaveAsCancelException;
-import home.gui.exception.SaveAsToSameFileException;
+import home.gui.exception.SaveToAlreadyExistsFileException;
 import home.utils.LogUtils;
 import home.utils.ThreadUtil;
+import home.utils.Utils;
 
 public final class SaveActionListener implements ActionListener {
 
@@ -40,35 +57,65 @@ public final class SaveActionListener implements ActionListener {
 
     @Override
     public void actionPerformed(ActionEvent event) {
+        try {
+            if (isSaveAs) {
+                try {
+                    CustomJFileChooserDb.createAndShowChooser(parent, DbOperation.SAVE_AS);
+                } catch (SaveToAlreadyExistsFileException e) {
+                    JOptionPane.showMessageDialog(parent, GuiConst.ALREADY_EXISTS_TEXT,
+                            GuiConst.ALREADY_EXISTS_TITLE, JOptionPane.ERROR_MESSAGE);
+                    return;
+                } catch (SaveAsCancelException e) {
+                    // to do nothing
+                    return;
+                }
+            } else {
+                try {
+                    if (!Settings.hasDatabase()) {
+                        CustomJFileChooserDb.createAndShowChooser(parent, DbOperation.SAVE);
+                        DbInitializer.createTableIfNotExists();
+                    }
+                } catch (SaveToAlreadyExistsFileException e) {
+                    JOptionPane.showMessageDialog(parent, GuiConst.ALREADY_EXISTS_TEXT,
+                            GuiConst.ALREADY_EXISTS_TITLE, JOptionPane.ERROR_MESSAGE);
+                    return;
+                } catch (CreateOpenSaveCancelException e) {
+                    // to do nothing
+                    return;
+                }
+            }
+
+            saveChangesToDb();
+        } catch (IOException e) {
+            LogUtils.logAndShowError(log, parent, "Error while create/open DB file.",
+                    "Create/Open file error.", e);
+        } catch (SQLException e) {
+            LogUtils.logAndShowError(log, parent,
+                    "Error while work with DB.\n" + e.getMessage(),
+                    "Work with DB error", e);
+        }
+    }
+
+    private void saveChangesToDb() {
         ThreadUtil.runInThread(() -> {
             Thread.currentThread().setName("-> save changes to database");
+
             try {
                 if (isSaveAs) {
-                    try {
-                        CustomJFileChooserDb.createAndShowChooser(parent,
-                                ChooserDbOperation.SAVE_AS);
-                        DbInitializer.createTableIfNotExists();
-                        DaoSQLite.getInstance().saveAs();
-                    } catch (SaveAsToSameFileException e) {
-                        DaoSQLite.getInstance().saveAllChanges();
-                    } catch (SaveAsCancelException e) {
-                        // to do nothing
-                        return;
-                    }
+                    DbInitializer.createTableIfNotExists();
+                    Dao.saveAs();
                 } else {
-                    DaoSQLite.getInstance().saveAllChanges();
+                    Dao.saveAllChanges();
                 }
 
-                DataActionInGui.init(DaoSQLite.getInstance().readAll());
-                dbLabel.setText(Settings.getDbFilePath());
-                JOptionPane.showMessageDialog(parent, IGuiConsts.SAVE_TEXT,
-                        IGuiConsts.SAVE_TITLE, JOptionPane.INFORMATION_MESSAGE);
-            } catch (IOException e) {
-                LogUtils.logAndShowError(log, parent, "Error while create/open DB file.",
-                        "Create/Open file error.", e);
+                DataActionInGui.init(Dao.readAll());
+                dbLabel.setText(Utils.generateDbDescription());
+
+                JOptionPane.showMessageDialog(parent, GuiConst.SAVE_TEXT,
+                        GuiConst.SAVE_TITLE, JOptionPane.INFORMATION_MESSAGE);
             } catch (SQLException e) {
                 LogUtils.logAndShowError(log, parent,
-                        "Error while work with DB file.\n" + e.getMessage(),
+                        "Error while work with DB.\n" + e.getMessage(),
                         "Work with DB error", e);
             }
         });

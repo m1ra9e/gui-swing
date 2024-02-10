@@ -1,10 +1,24 @@
+/*******************************************************************************
+ * Copyright 2021-2024 Lenar Shamsutdinov
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *******************************************************************************/
 package home.gui.component;
 
 import javax.swing.JTable;
 import javax.swing.ListSelectionModel;
+import javax.swing.table.AbstractTableModel;
 import javax.swing.table.TableColumn;
-
-import home.Storage;
 
 @SuppressWarnings("serial")
 public final class CustomJTable extends JTable {
@@ -21,12 +35,13 @@ public final class CustomJTable extends JTable {
     private CustomJTable() {
     }
 
-    public static CustomJTable create() {
+    public static CustomJTable create(AbstractTableModel tableDataModel,
+            boolean isAutoResizeTableWidth) {
         var table = new CustomJTable();
-        table.setModel(new CustomJTableDataModel(Storage.INSTANCE.getAll()));
+        table.setModel(tableDataModel);
         table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
-        // table.setAutoResizeMode(JTable.AUTO_RESIZE_LAST_COLUMN);
+        table.setAutoResize(isAutoResizeTableWidth);
 
         table.setColMinWidth(CustomJTableDataModel.TYPE_COL_IDX, TYPE_MIN_WIDTH);
         table.setColMinWidth(CustomJTableDataModel.COLOR_COL_IDX, COLOR_MIN_WIDTH);
@@ -49,5 +64,13 @@ public final class CustomJTable extends JTable {
         tblCol.setMinWidth(minWidth);
         tblCol.setMaxWidth(maxWidth);
         tblCol.setPreferredWidth(prefWidth);
+    }
+
+    public void setAutoResize(boolean isAutoResizeTableWidth) {
+        if (isAutoResizeTableWidth) {
+            setAutoResizeMode(JTable.AUTO_RESIZE_LAST_COLUMN);
+        } else {
+            setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
+        }
     }
 }
