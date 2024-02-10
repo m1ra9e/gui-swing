@@ -1,3 +1,18 @@
+/*******************************************************************************
+ * Copyright 2021-2024 Lenar Shamsutdinov
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *******************************************************************************/
 package home.gui.component.dialog;
 
 import java.awt.BorderLayout;
@@ -8,12 +23,11 @@ import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
-import javax.swing.SwingUtilities;
 
 import org.jdesktop.swingx.JXDatePicker;
 
 import home.gui.DataActionInGui;
-import home.gui.IGuiConsts;
+import home.gui.GuiConst;
 import home.gui.component.CustomJButton;
 import home.gui.component.CustomJLabel;
 import home.gui.component.CustomJPanel;
@@ -23,8 +37,8 @@ import home.gui.component.CustomJXDatePicker;
 import home.model.AbstractVehicle;
 
 @SuppressWarnings("serial")
-public abstract sealed class AbstractDialog
-        extends AbstractCustomJDialog permits AbstractDialogTrailer,DialogMotorcycle {
+public abstract sealed class AbstractDialogVehicle
+        extends AbstractCustomJDialog permits AbstractDialogTrailer, DialogMotorcycle {
 
     private static final int TEXT_FIELD_COLUMN_NUMBERS = 9;
 
@@ -46,7 +60,7 @@ public abstract sealed class AbstractDialog
     protected JPanel panelTextFields;
     private JPanel panelButtons;
 
-    public AbstractDialog(String title, int width, int height,
+    public AbstractDialogVehicle(String title, int width, int height,
             AbstractVehicle dataObj, int tblRowOfSelectedDataObj) {
         super(title, width, height);
         this.tblRowOfSelectedDataObj = tblRowOfSelectedDataObj;
@@ -72,9 +86,9 @@ public abstract sealed class AbstractDialog
     }
 
     protected void createDataComponents() {
-        lblColor = CustomJLabel.create(IGuiConsts.COLOR);
-        lblNumber = CustomJLabel.create(IGuiConsts.NUMBER);
-        lblDate = CustomJLabel.create(IGuiConsts.DATE);
+        lblColor = CustomJLabel.create(GuiConst.COLOR);
+        lblNumber = CustomJLabel.create(GuiConst.NUMBER);
+        lblDate = CustomJLabel.create(GuiConst.DATE);
 
         tfColor = CustomJTextField.create(TEXT_FIELD_COLUMN_NUMBERS);
         tfNumber = CustomJTextField.create(TEXT_FIELD_COLUMN_NUMBERS);
@@ -89,7 +103,7 @@ public abstract sealed class AbstractDialog
     }
 
     private void createButtons() {
-        btnSave = CustomJButton.create(IGuiConsts.OK);
+        btnSave = CustomJButton.create(GuiConst.OK);
         btnSave.addActionListener(actionEvent -> {
             fillDataObj();
             if (checkObjFilling()) {
@@ -97,12 +111,12 @@ public abstract sealed class AbstractDialog
                 dispose();
             }
         });
-        btnCancel = CustomJButton.create(IGuiConsts.CANCEL);
+        btnCancel = CustomJButton.create(GuiConst.CANCEL);
         btnCancel.addActionListener(actionEvent -> dispose());
     }
 
     protected void createPanels() {
-        panelTextFields = CustomJPanel.create(PanelType.DIALOG_TEXT_FIELDS_PANEL);
+        panelTextFields = CustomJPanel.create(PanelType.VEHICLE_DIALOG_TEXT_FIELDS_PANEL);
         panelTextFields.add(lblColor);
         panelTextFields.add(tfColor);
         panelTextFields.add(lblNumber);
@@ -110,7 +124,7 @@ public abstract sealed class AbstractDialog
         panelTextFields.add(lblDate);
         panelTextFields.add(tfDate);
 
-        panelButtons = CustomJPanel.create(PanelType.DIALOG_BUTTON_PANEL);
+        panelButtons = CustomJPanel.create(PanelType.VEHICLE_DIALOG_BUTTON_PANEL);
         panelButtons.add(btnSave);
         panelButtons.add(btnCancel);
     }
@@ -119,19 +133,6 @@ public abstract sealed class AbstractDialog
         getContentPane().add(panelTextFields, BorderLayout.CENTER);
         getContentPane().add(panelButtons, BorderLayout.SOUTH);
         makeDialogVisible();
-    }
-
-    /**
-     * Creating and displaying a form. When launched via
-     * "SwingUtilities.invokeLater(new Runnable(){...}" the dialog will be created
-     * and displayed after all expected events have been processed, i.e. the dialog
-     * will be created and displayed when all resources are ready. This is
-     * necessary, so that all elements are guaranteed to be displayed in the window
-     * (if you do "setVisible(true)" from the main thread, then there is a chance
-     * that some element will not be displayed in the window).
-     */
-    private void makeDialogVisible() {
-        SwingUtilities.invokeLater(() -> setVisible(true));
     }
 
     protected void fillDataObj() {

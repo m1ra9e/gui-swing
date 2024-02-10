@@ -1,3 +1,18 @@
+/*******************************************************************************
+ * Copyright 2021-2024 Lenar Shamsutdinov
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *******************************************************************************/
 package home.db.dao;
 
 import java.sql.Connection;
@@ -14,50 +29,69 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import home.IConsts;
+import home.Const;
 import home.Storage;
+import home.db.conn.Connector;
 import home.model.AbstractVehicle;
 import home.model.Car;
 import home.model.Motorcycle;
 import home.model.Truck;
 import home.model.VehicleType;
 import home.utils.LogUtils;
+import home.utils.NamedFormatter;
 
-abstract sealed class AbstractDao implements IDao permits DaoSQLite {
+abstract sealed class AbstractDao implements IDao permits PgDao, SQLiteDao {
 
-    private static final String SELECT_ALL = "SELECT * FROM vehicle;";
+    private static final Logger LOG = LoggerFactory.getLogger(AbstractDao.class);
 
-    private static final String SELECT_ONE = "SELECT * FROM vehicle WHERE id = ?;";
+    private static final String SELECT_ALL = NamedFormatter
+            .format("SELECT * FROM ${table_name}",
+                    DaoConst.PLACEHOLDER_VALUES);
 
-    private static final String INSERT = """
-            INSERT INTO vehicle
-            ('type', 'color', 'number', 'date_time', 'is_transports_cargo',
-            'is_transports_passengers', 'has_trailer', 'has_cradle')
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?);""";
+    private static final String SELECT_ONE = NamedFormatter
+            .format("SELECT * FROM ${table_name} WHERE ${col_id} = ?",
+                    DaoConst.PLACEHOLDER_VALUES);
 
-    private static final String UPDATE = """
-            UPDATE vehicle SET
-            type = ?, color = ?, number = ?, date_time = ?, is_transports_cargo = ?,
-            is_transports_passengers = ?, has_trailer = ?, has_cradle = ?
-            WHERE id = ?;""";
+    // !!! the order of the columns in the INSERT query must be the same as in the
+    // UPDATE query because they both use the fillStmtByDataFromObj method.
+    private static final String INSERT = NamedFormatter.format("""
+            INSERT INTO ${table_name}
+            (${col_type}, ${col_color}, ${col_number}, ${col_date_time},
+            ${col_is_transports_cargo}, ${col_is_transports_passengers},
+            ${col_has_trailer}, ${col_has_cradle})
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            """, DaoConst.PLACEHOLDER_VALUES);
 
-    private static final String DELETE = "DELETE FROM vehicle WHERE id in (%s);";
+    // !!! the order of the columns in the UPDATE query must be the same as in the
+    // INSERT query because they both use the fillStmtByDataFromObj method.
+    private static final String UPDATE = NamedFormatter.format("""
+            UPDATE ${table_name} SET
+            ${col_type} = ?, ${col_color} = ?, ${col_number} = ?, ${col_date_time} = ?,
+            ${col_is_transports_cargo} = ?, ${col_is_transports_passengers} = ?,
+            ${col_has_trailer} = ?, ${col_has_cradle} = ?
+            WHERE ${col_id} = ?
+            """, DaoConst.PLACEHOLDER_VALUES);
 
+    private static final String DELETE = NamedFormatter
+            .format("DELETE FROM ${table_name} WHERE ${col_id} ",
+                    DaoConst.PLACEHOLDER_VALUES)
+            + "IN (%s)";
+
+    private static final int BATCH_SIZE = 1_000;
+
+    // https://www.ibm.com/docs/en/db2woc?topic=messages-sqlstate
+    // 08 - Connection Exception
     private static final String CONNECTION_ERROR_CODE = "08";
 
-    protected AbstractDao() {
-    }
-
-    protected abstract Connection getConnection() throws SQLException;
+    private static final int FALSE_VALUE_FOR_DB = 0;
 
     protected abstract int getTransactionIsolation();
 
-    protected abstract Logger getLogger();
-
     @Override
     public AbstractVehicle readOne(long id) throws SQLException {
-        try (var conn = getConnection()) {
+        try (var conn = Connector.getConnection()) {
             conn.setTransactionIsolation(getTransactionIsolation());
 
             try (var pstmt = conn.prepareStatement(SELECT_ONE)) {
@@ -82,7 +116,7 @@ abstract sealed class AbstractDao implements IDao permits DaoSQLite {
 
     @Override
     public List<AbstractVehicle> readAll() throws SQLException {
-        try (var conn = getConnection()) {
+        try (var conn = Connector.getConnection()) {
             conn.setTransactionIsolation(getTransactionIsolation());
             try (var stmt = conn.createStatement();
                     var res = stmt.executeQuery(SELECT_ALL)) {
@@ -96,38 +130,44 @@ abstract sealed class AbstractDao implements IDao permits DaoSQLite {
     }
 
     private AbstractVehicle convertResultToDataObj(ResultSet res) throws SQLException {
-        String type = res.getString(IDaoConsts.TYPE);
-        VehicleType vehicleType = VehicleType.getVehicleType(type);
-        if (vehicleType == null) {
-            throw new SQLException("Wrong vehicle type received : " + type);
-        }
+        String type = res.getString(DaoConst.TYPE);
+
+        VehicleType vehicleType = getVehicleTypeOrThrowSqlException(type);
 
         AbstractVehicle vehicle = switch (vehicleType) {
             case CAR -> {
                 var car = new Car();
-                car.setTransportsPassengers(convertToBoolean(res.getInt(IDaoConsts.IS_TRANSPORTS_PASSENGERS)));
-                car.setHasTrailer(convertToBoolean(res.getInt(IDaoConsts.HAS_TRAILER)));
+                car.setTransportsPassengers(convertToBoolean(res.getInt(DaoConst.IS_TRANSPORTS_PASSENGERS)));
+                car.setHasTrailer(convertToBoolean(res.getInt(DaoConst.HAS_TRAILER)));
                 yield car;
             }
             case TRUCK -> {
                 var truck = new Truck();
-                truck.setTransportsCargo(convertToBoolean(res.getInt(IDaoConsts.IS_TRANSPORTS_CARGO)));
-                truck.setHasTrailer(convertToBoolean(res.getInt(IDaoConsts.HAS_TRAILER)));
+                truck.setTransportsCargo(convertToBoolean(res.getInt(DaoConst.IS_TRANSPORTS_CARGO)));
+                truck.setHasTrailer(convertToBoolean(res.getInt(DaoConst.HAS_TRAILER)));
                 yield truck;
             }
             case MOTORCYCLE -> {
                 var motorcycle = new Motorcycle();
-                motorcycle.setHasCradle(convertToBoolean(res.getInt(IDaoConsts.HAS_CRADLE)));
+                motorcycle.setHasCradle(convertToBoolean(res.getInt(DaoConst.HAS_CRADLE)));
                 yield motorcycle;
             }
         };
 
-        vehicle.setId(res.getLong(IDaoConsts.ID));
-        vehicle.setColor(res.getString(IDaoConsts.COLOR));
-        vehicle.setNumber(res.getString(IDaoConsts.NUMBER));
-        vehicle.setDateTime(res.getLong(IDaoConsts.DATE_TIME));
+        vehicle.setId(res.getLong(DaoConst.ID));
+        vehicle.setColor(res.getString(DaoConst.COLOR));
+        vehicle.setNumber(res.getString(DaoConst.NUMBER));
+        vehicle.setDateTime(res.getLong(DaoConst.DATE_TIME));
 
         return vehicle;
+    }
+
+    private VehicleType getVehicleTypeOrThrowSqlException(String type) throws SQLException {
+        try {
+            return VehicleType.getVehicleType(type);
+        } catch (IllegalArgumentException e) {
+            throw new SQLException(e.getMessage(), e);
+        }
     }
 
     private boolean convertToBoolean(int intBoolean) throws SQLException {
@@ -143,6 +183,7 @@ abstract sealed class AbstractDao implements IDao permits DaoSQLite {
     public void saveAllChanges() throws SQLException {
         var exceptions = new ArrayList<SQLException>();
 
+        // delete operations
         try {
             Long[] idsForDel = Storage.INSTANCE.getIdsForDelete();
             if (idsForDel.length > 0) {
@@ -152,6 +193,7 @@ abstract sealed class AbstractDao implements IDao permits DaoSQLite {
             exceptions.add(new SQLException("DELETE operation error.", e));
         }
 
+        // update operations
         try {
             Set<Long> idsForUpdate = Storage.INSTANCE.getIdsForUpdate();
             operation(this::update, dataObj -> dataObj.getId() > 0
@@ -160,6 +202,7 @@ abstract sealed class AbstractDao implements IDao permits DaoSQLite {
             exceptions.add(new SQLException("UPDATE operation error.", e));
         }
 
+        // insert operations
         try {
             operation(this::insert, dataObj -> dataObj.getId() == 0);
         } catch (IllegalStateException e) {
@@ -203,7 +246,7 @@ abstract sealed class AbstractDao implements IDao permits DaoSQLite {
             List<AbstractVehicle> dataObjs, String errorMsg) {
         String sql = isUpdateOperation ? UPDATE : INSERT;
 
-        try (var conn = getConnection()) {
+        try (var conn = Connector.getConnection()) {
             conn.setAutoCommit(false);
             conn.setTransactionIsolation(getTransactionIsolation());
             try (var pstmt = conn.prepareStatement(sql)) {
@@ -214,21 +257,22 @@ abstract sealed class AbstractDao implements IDao permits DaoSQLite {
                     pstmt.addBatch();
                     operationsCount++;
 
-                    // Execute every 1_000 items.
-                    if (operationsCount % 1_000 == 0 || operationsCount == dataObjs.size()) {
+                    // Execute every BATCH_SIZE items.
+                    if (operationsCount % BATCH_SIZE == 0 || operationsCount == dataObjs.size()) {
                         checkBatchExecution(pstmt.executeBatch(),
-                                String.format(errorMsg, dataObj), getLogger());
+                                errorMsg.formatted(dataObj), LOG);
                         conn.commit();
                     }
                 }
-                conn.setAutoCommit(true);
             } catch (SQLException e) {
-                String error = String.format(errorMsg, IConsts.EMPTY_STRING);
+                String error = errorMsg.formatted(Const.EMPTY_STRING);
 
                 checkConnectionState(e, error);
 
                 rollbackAndLog(conn, e, error);
                 sqlOperationOneByOne(conn, sql, dataObjs, isUpdateOperation, error);
+            } finally {
+                conn.setAutoCommit(true);
             }
         } catch (SQLException e) {
             String operationType = isUpdateOperation ? "UPDATE" : "INSERT";
@@ -265,12 +309,12 @@ abstract sealed class AbstractDao implements IDao permits DaoSQLite {
     }
 
     private void rollbackAndLog(Connection conn, Exception e, String errorMsg) {
-        getLogger().error(errorMsg, e);
+        LOG.error(errorMsg, e);
         try {
             conn.rollback();
         } catch (SQLException ex) {
             throw LogUtils.logAndCreateIllegalStateException(
-                    errorMsg + " Sql rollback error.", getLogger(), e);
+                    errorMsg + " Sql rollback error.", LOG, e);
         }
     }
 
@@ -278,7 +322,7 @@ abstract sealed class AbstractDao implements IDao permits DaoSQLite {
         String sqlState = e.getSQLState();
         if (sqlState.startsWith(CONNECTION_ERROR_CODE)) {
             throw LogUtils.logAndCreateSqlException(
-                    "%s:\nConnection error (code %s)".formatted(errorMsg, sqlState), getLogger(), e);
+                    "%s:\nConnection error (code %s)".formatted(errorMsg, sqlState), LOG, e);
         }
     }
 
@@ -307,7 +351,7 @@ abstract sealed class AbstractDao implements IDao permits DaoSQLite {
             sb.append(errorMsg).append(" Can't ").append(operationType)
                     .append(":\n").append(String.join("\n", errorsWithDataObjs));
 
-            throw LogUtils.logAndCreateSqlException(sb.toString(), getLogger(), mainExeption);
+            throw LogUtils.logAndCreateSqlException(sb.toString(), LOG, mainExeption);
         }
     }
 
@@ -323,17 +367,24 @@ abstract sealed class AbstractDao implements IDao permits DaoSQLite {
         switch (dataObjType) {
             case CAR:
                 Car car = (Car) dataObj;
+                pstmt.setInt(5, FALSE_VALUE_FOR_DB);
                 pstmt.setInt(6, convertToInt(car.isTransportsPassengers()));
                 pstmt.setInt(7, convertToInt(car.hasTrailer()));
+                pstmt.setInt(8, FALSE_VALUE_FOR_DB);
                 break;
 
             case TRUCK:
                 Truck truck = (Truck) dataObj;
                 pstmt.setInt(5, convertToInt(truck.isTransportsCargo()));
+                pstmt.setInt(6, FALSE_VALUE_FOR_DB);
                 pstmt.setInt(7, convertToInt(truck.hasTrailer()));
+                pstmt.setInt(8, FALSE_VALUE_FOR_DB);
                 break;
 
             case MOTORCYCLE:
+                pstmt.setInt(5, FALSE_VALUE_FOR_DB);
+                pstmt.setInt(6, FALSE_VALUE_FOR_DB);
+                pstmt.setInt(7, FALSE_VALUE_FOR_DB);
                 pstmt.setInt(8, convertToInt(((Motorcycle) dataObj).hasCradle()));
                 break;
         }
@@ -349,8 +400,8 @@ abstract sealed class AbstractDao implements IDao permits DaoSQLite {
 
     private void delete(Long[] ids) {
         String idsStr = Stream.of(ids).map(String::valueOf).collect(Collectors.joining(","));
-        String sql = String.format(DELETE, idsStr);
-        try (var conn = getConnection()) {
+        String sql = DELETE.formatted(idsStr);
+        try (var conn = Connector.getConnection()) {
             conn.setAutoCommit(false);
             conn.setTransactionIsolation(getTransactionIsolation());
             try (var pstmt = conn.prepareStatement(sql)) {
@@ -359,7 +410,6 @@ abstract sealed class AbstractDao implements IDao permits DaoSQLite {
                             + "\n Id list for delete: " + idsStr);
                 }
                 conn.commit();
-                conn.setAutoCommit(true);
             } catch (SQLException e) {
                 String errorMsg = "Error while removal several rows in one query";
 
@@ -367,6 +417,8 @@ abstract sealed class AbstractDao implements IDao permits DaoSQLite {
 
                 rollbackAndLog(conn, e, errorMsg);
                 deleteOneByOne(conn, ids);
+            } finally {
+                conn.setAutoCommit(true);
             }
         } catch (SQLException e) {
             throw new IllegalStateException("Sql DELETE operation error : ", e);
@@ -378,13 +430,13 @@ abstract sealed class AbstractDao implements IDao permits DaoSQLite {
         var errorsWithIds = new ArrayList<String>();
 
         conn.setAutoCommit(true);
-        String sql = String.format(DELETE, "?");
+        String sql = DELETE.formatted("?");
 
         for (Long id : ids) {
             try (var pstmt = conn.prepareStatement(sql)) {
                 pstmt.setLong(1, id);
                 if (pstmt.executeUpdate() <= 0) {
-                    errorsWithIds.add(id + IConsts.EMPTY_STRING);
+                    errorsWithIds.add(id + Const.EMPTY_STRING);
                 }
             } catch (SQLException e) {
                 mainExeption = addException(mainExeption, e,
@@ -399,7 +451,7 @@ abstract sealed class AbstractDao implements IDao permits DaoSQLite {
                     .append("\nCan't delete objects with ids:\n")
                     .append(String.join("\n", errorsWithIds));
 
-            throw LogUtils.logAndCreateSqlException(sb.toString(), getLogger(), mainExeption);
+            throw LogUtils.logAndCreateSqlException(sb.toString(), LOG, mainExeption);
         }
     }
 
