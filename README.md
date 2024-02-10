@@ -17,6 +17,7 @@ git clone https://github.com/m1ra9e/gui-swing.git gui-swing
 cd gui-swing
 mvn clean package
 ```
+
 ## Run
 
 For run the application, execute [run.bat](tools/run.bat) on Windows or [run.sh](tools/run.sh) on Linux.
@@ -24,6 +25,8 @@ For run the application, execute [run.bat](tools/run.bat) on Windows or [run.sh]
 ## Test
 
 For test with local PostgreSQL fill [pg_test_settings.properties](src/test/resources/home/db/pg_test_settings.properties) by own data.
+
+For run tests, execute [test.bat](tools/test.bat) on Windows or [test.sh](tools/test.sh) on Linux.
 
 ## Changelog
 
@@ -34,7 +37,7 @@ For test with local PostgreSQL fill [pg_test_settings.properties](src/test/resou
 
 | version | description |
 | ------- | ----------- |
-| 6.0.0 | removed choose data store on start, added PostgreSQL, sorting in properties-file, added tools-scripts, refactoring |
+| 6.0.0 | added PostgreSQL, removed choose data store on start, date and sorting in properties-file, added tools-scripts, refactoring, added license |
 | 5.0.0 | java_17, import and export |
 | 4.0.0 | improve and refactoring |
 | 3.0.0 | save data after push button |

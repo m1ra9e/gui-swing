@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 - Added PostgreSQL support.
 - Added tools-scripts (bat/sh).
+- Added license.
 
 ### Changed
 
@@ -34,7 +35,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Added
 
-- Added import data from file and export data to file for different formats : xml, yaml, jsom, csv, bser, ser.
+- Added import data from file and export data to file for different formats : xml, yaml, json, csv, bser, ser.
 
 ### Changed
 
