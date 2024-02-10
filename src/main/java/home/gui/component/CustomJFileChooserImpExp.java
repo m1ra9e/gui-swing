@@ -1,3 +1,18 @@
+/*******************************************************************************
+ * Copyright 2021-2024 Lenar Shamsutdinov
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *******************************************************************************/
 package home.gui.component;
 
 import java.awt.Component;
@@ -26,11 +41,12 @@ import home.file.xml.XmlExporter;
 import home.file.xml.XmlImporter;
 import home.gui.DataActionInGui;
 import home.model.AbstractVehicle;
+import home.utils.ThreadUtil;
 
 @SuppressWarnings("serial")
 public final class CustomJFileChooserImpExp extends JFileChooser {
 
-    public static enum DataFormat {
+    public enum DataFormat {
 
         XML("xml", "XML (*.xml)"),
         YAML("yaml", "YAML (*.yaml)"),
@@ -79,40 +95,44 @@ public final class CustomJFileChooserImpExp extends JFileChooser {
             return;
         }
 
-        File file = getSelectedFile();
-        file = addExtensionToFileIfNotExists(file, dataFormat.getExtension());
+        ThreadUtil.runInThread(() -> {
+            Thread.currentThread().setName("-> export/import operation");
 
-        if (isImport) {
-            IImporter importer = switch (dataFormat) {
-                case XML -> new XmlImporter();
-                case YAML -> new YamlImporter();
-                case JSON -> new JsonImporter();
-                case CSV -> new CsvImporter();
-                case BSER -> new BserImporter();
-                case SER -> new SerImporter();
-            };
-            List<AbstractVehicle> dataObjs = importer.importDataObjsFromFile(file);
-            DataActionInGui.add(dataObjs);
-        } else {
-            IExporter exporter = switch (dataFormat) {
-                case XML -> new XmlExporter();
-                case YAML -> new YamlExporter();
-                case JSON -> new JsonExporter();
-                case CSV -> new CsvExporter();
-                case BSER -> new BserExporter();
-                case SER -> new SerExporter();
-            };
+            File file = getSelectedFile();
+            file = addExtensionToFileIfNotExists(file, dataFormat.getExtension());
 
-            if (DataFormat.SER == dataFormat) {
-                ((SerExporter) exporter).exportAllDataObjsToFile(file);
+            if (isImport) {
+                IImporter importer = switch (dataFormat) {
+                    case XML -> new XmlImporter();
+                    case YAML -> new YamlImporter();
+                    case JSON -> new JsonImporter();
+                    case CSV -> new CsvImporter();
+                    case BSER -> new BserImporter();
+                    case SER -> new SerImporter();
+                };
+                List<AbstractVehicle> dataObjs = importer.importDataObjsFromFile(file);
+                DataActionInGui.add(dataObjs);
             } else {
-                String text = exporter.exportAllDataObjsToString();
-                FileHandler.writeStringToFile(file, text);
-            }
-        }
+                IExporter exporter = switch (dataFormat) {
+                    case XML -> new XmlExporter();
+                    case YAML -> new YamlExporter();
+                    case JSON -> new JsonExporter();
+                    case CSV -> new CsvExporter();
+                    case BSER -> new BserExporter();
+                    case SER -> new SerExporter();
+                };
 
-        JOptionPane.showMessageDialog(parent, direction + " successfully",
-                direction, JOptionPane.INFORMATION_MESSAGE);
+                if (DataFormat.SER == dataFormat) {
+                    ((SerExporter) exporter).exportAllDataObjsToFile(file);
+                } else {
+                    String text = exporter.exportAllDataObjsToString();
+                    FileHandler.writeStringToFile(file, text);
+                }
+            }
+
+            JOptionPane.showMessageDialog(parent, direction + " successfully",
+                    direction, JOptionPane.INFORMATION_MESSAGE);
+        });
     }
 
     private File addExtensionToFileIfNotExists(File file, String extension) {

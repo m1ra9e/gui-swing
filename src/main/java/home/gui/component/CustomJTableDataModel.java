@@ -1,16 +1,31 @@
+/*******************************************************************************
+ * Copyright 2021-2024 Lenar Shamsutdinov
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *******************************************************************************/
 package home.gui.component;
 
 import java.util.List;
 
 import javax.swing.table.AbstractTableModel;
 
-import home.IConsts;
-import home.gui.IGuiConsts;
+import home.Const;
+import home.gui.GuiConst;
 import home.model.AbstractVehicle;
 import home.utils.Utils;
 
 @SuppressWarnings("serial")
-final class CustomJTableDataModel extends AbstractTableModel {
+public final class CustomJTableDataModel extends AbstractTableModel {
 
     private static final int COLUMNS_COUNT = 5;
 
@@ -22,7 +37,7 @@ final class CustomJTableDataModel extends AbstractTableModel {
 
     private final List<AbstractVehicle> dataObjs;
 
-    CustomJTableDataModel(List<AbstractVehicle> dataObjs) {
+    public CustomJTableDataModel(List<AbstractVehicle> dataObjs) {
         this.dataObjs = dataObjs;
     }
 
@@ -46,12 +61,12 @@ final class CustomJTableDataModel extends AbstractTableModel {
     @Override
     public String getColumnName(int columnIndex) {
         String columnName = switch (columnIndex) {
-            case TYPE_COL_IDX -> IGuiConsts.TYPE;
-            case COLOR_COL_IDX -> IGuiConsts.COLOR;
-            case NUMBER_COL_IDX -> IGuiConsts.NUMBER;
-            case DATE_COL_IDX -> IGuiConsts.DATE;
-            case DEL_MARK_COL_IDX -> IGuiConsts.DELETION_MARK;
-            default -> IConsts.EMPTY_STRING;
+            case TYPE_COL_IDX -> GuiConst.TYPE;
+            case COLOR_COL_IDX -> GuiConst.COLOR;
+            case NUMBER_COL_IDX -> GuiConst.NUMBER;
+            case DATE_COL_IDX -> GuiConst.DATE;
+            case DEL_MARK_COL_IDX -> GuiConst.DELETION_MARK;
+            default -> Const.EMPTY_STRING;
         };
         return columnName;
     }
@@ -71,7 +86,7 @@ final class CustomJTableDataModel extends AbstractTableModel {
             case NUMBER_COL_IDX -> dataObj.getNumber();
             case DATE_COL_IDX -> Utils.getFormattedDate(dataObj.getDateTime());
             case DEL_MARK_COL_IDX -> dataObj.isMarkedForDelete();
-            default -> IConsts.EMPTY_STRING;
+            default -> Const.EMPTY_STRING;
         };
 
         return cellValue;

@@ -1,3 +1,18 @@
+/*******************************************************************************
+ * Copyright 2021-2024 Lenar Shamsutdinov
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *******************************************************************************/
 package home.file.csv;
 
 import java.io.IOException;
@@ -36,7 +51,7 @@ public final class CsvExporter implements IExporter {
         List<AbstractVehicle> dataObjStorage = Storage.INSTANCE.getAll();
 
         var convertedDataObjs = new ArrayList<String[]>(dataObjStorage.size() + 1);
-        convertedDataObjs.add(ICsvConsts.CSV_HEADER);
+        convertedDataObjs.add(CsvConst.CSV_HEADER);
         for (AbstractVehicle dataObj : dataObjStorage) {
             convertedDataObjs.add(convertDataObjToArray(dataObj));
         }
@@ -54,38 +69,38 @@ public final class CsvExporter implements IExporter {
     }
 
     private String[] convertDataObjToArray(AbstractVehicle dataObj) {
-        var array = new String[ICsvConsts.CSV_ROW_SIZE];
+        var array = new String[CsvConst.CSV_ROW_SIZE];
 
         VehicleType type = dataObj.getType();
 
-        array[ICsvConsts.TYPE_IDX] = type.getType();
-        array[ICsvConsts.COLOR_IDX] = dataObj.getColor();
-        array[ICsvConsts.NUMBER_IDX] = dataObj.getNumber();
-        array[ICsvConsts.DATE_IDX] = Utils.getFormattedDate(dataObj.getDateTime());
+        array[CsvConst.TYPE_IDX] = type.getType();
+        array[CsvConst.COLOR_IDX] = dataObj.getColor();
+        array[CsvConst.NUMBER_IDX] = dataObj.getNumber();
+        array[CsvConst.DATE_IDX] = Utils.getFormattedDate(dataObj.getDateTime());
 
         String hasTrailerStr = FALSE;
         if (type.in(VehicleType.CAR, VehicleType.TRUCK)) {
             hasTrailerStr = Boolean.toString(((AbstractVehicleWithTrailer) dataObj).hasTrailer());
         }
-        array[ICsvConsts.HAS_TRAILER_IDX] = hasTrailerStr;
+        array[CsvConst.HAS_TRAILER_IDX] = hasTrailerStr;
 
         String isTransportsPassengersStr = FALSE;
         if (VehicleType.CAR == type) {
             isTransportsPassengersStr = Boolean.toString(((Car) dataObj).isTransportsPassengers());
         }
-        array[ICsvConsts.IS_TRANSPORTS_PASSENGERS_IDX] = isTransportsPassengersStr;
+        array[CsvConst.IS_TRANSPORTS_PASSENGERS_IDX] = isTransportsPassengersStr;
 
         String isTransportsCargoStr = FALSE;
         if (VehicleType.TRUCK == type) {
             isTransportsCargoStr = Boolean.toString(((Truck) dataObj).isTransportsCargo());
         }
-        array[ICsvConsts.IS_TRANSPORTS_CARGO_IDX] = isTransportsCargoStr;
+        array[CsvConst.IS_TRANSPORTS_CARGO_IDX] = isTransportsCargoStr;
 
         String hasCradle = FALSE;
         if (VehicleType.MOTORCYCLE == type) {
             hasCradle = Boolean.toString(((Motorcycle) dataObj).hasCradle());
         }
-        array[ICsvConsts.HAS_CRADLE_IDX] = hasCradle;
+        array[CsvConst.HAS_CRADLE_IDX] = hasCradle;
 
         return array;
     }

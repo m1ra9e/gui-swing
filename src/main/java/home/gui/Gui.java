@@ -1,3 +1,18 @@
+/*******************************************************************************
+ * Copyright 2021-2024 Lenar Shamsutdinov
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *******************************************************************************/
 package home.gui;
 
 import java.awt.BorderLayout;
@@ -31,23 +46,26 @@ import org.slf4j.LoggerFactory;
 
 import home.Main;
 import home.Settings;
-import home.Settings.Setting;
 import home.Storage;
 import home.gui.component.CustomJButton;
 import home.gui.component.CustomJFileChooserImpExp.DataFormat;
 import home.gui.component.CustomJFrame;
+import home.gui.component.CustomJLabel;
 import home.gui.component.CustomJPanel;
 import home.gui.component.CustomJPanel.PanelType;
 import home.gui.component.CustomJTable;
+import home.gui.component.CustomJTableDataModel;
 import home.gui.component.dialog.DialogCar;
 import home.gui.component.dialog.DialogMotorcycle;
 import home.gui.component.dialog.DialogTruck;
-import home.gui.listener.CreateOrOpenActionListener;
+import home.gui.listener.ConnectToServerDatabaseActionListener;
+import home.gui.listener.CreateOrOpenFileDatabaseActionListener;
 import home.gui.listener.ExportImportActionListener;
 import home.gui.listener.SaveActionListener;
 import home.model.AbstractVehicle;
-import home.utils.ThreadUtil;
 import home.utils.LogUtils;
+import home.utils.ThreadUtil;
+import home.utils.Utils;
 
 public enum Gui {
 
@@ -59,8 +77,8 @@ public enum Gui {
 
     private JLabel dbLabel;
 
-    private JTable table;
-    private AbstractTableModel tableModel;
+    private CustomJTable table;
+    private AbstractTableModel tableDataModel;
     private JScrollPane tableScrollPane;
 
     private JButton btnCar;
@@ -71,10 +89,10 @@ public enum Gui {
     private JPanel panelTable;
     private JPanel panelButton;
     private JMenuBar menuBar;
-    private JFrame frame;
+    private CustomJFrame frame;
 
     public void refreshTable() {
-        tableModel.fireTableDataChanged();
+        tableDataModel.fireTableDataChanged();
     }
 
     public void setDbLabel(String label) {
@@ -94,20 +112,16 @@ public enum Gui {
     private void setStyle(String style) {
         try {
             ColorSchema colorSchema = ColorSchema.getColorSchema(style);
-            if (colorSchema == null) {
-                throw new IllegalArgumentException("Incorrect style name : " + style);
-            }
             UIManager.setLookAndFeel(colorSchema.getLookAndFeelClassName());
         } catch (Exception e) {
             try {
                 UIManager.setLookAndFeel(UIManager.getCrossPlatformLookAndFeelClassName());
-                Settings.writeSetting(Setting.STYLE,
-                        ColorSchema.CROSSPLATFORM.name().toLowerCase(Locale.ROOT));
-                LogUtils.logAndShowError(LOG, frame,
-                        "Error while set the system color scheme.\n"
-                                + ColorSchema.CROSSPLATFORM.getNameForGui()
-                                + " color scheme will be used.\nError: "
-                                + e.getMessage(),
+                Settings.saveStyle(ColorSchema.CROSSPLATFORM.name().toLowerCase(Locale.ROOT));
+                LogUtils.logAndShowError(LOG, frame, """
+                        Error while set the system color scheme.
+                        %s color scheme will be used.
+                        Error: %s"""
+                        .formatted(ColorSchema.CROSSPLATFORM.getNameForGui(), e.getMessage()),
                         "System color scheme error", e);
             } catch (Exception ex) {
                 JFrame.setDefaultLookAndFeelDecorated(true);
@@ -119,10 +133,11 @@ public enum Gui {
     }
 
     private void createTable() {
-        dbLabel = new JLabel(Settings.hasPathToDbFile() ? Settings.getDbFilePath()
-                : IGuiConsts.CHOOSE_DB_FILE);
+        dbLabel = CustomJLabel.createSmall(Utils.generateDbDescription());
 
-        table = CustomJTable.create();
+        tableDataModel = new CustomJTableDataModel(Storage.INSTANCE.getAll());
+
+        table = CustomJTable.create(tableDataModel, Settings.isAutoResizeTableWidth());
         table.addMouseListener(new MouseAdapter() {
             @Override
             public void mousePressed(MouseEvent mouseEvent) {
@@ -136,24 +151,22 @@ public enum Gui {
         });
 
         tableScrollPane = new JScrollPane(table);
-
-        tableModel = (AbstractTableModel) table.getModel();
     }
 
     private void createButtons() {
-        btnCar = CustomJButton.create(IGuiConsts.CAR);
+        btnCar = CustomJButton.create(GuiConst.CAR);
         btnCar.addActionListener(actionEvent -> DialogCaller
                 .showObjDialog(frame, DialogCar.class));
 
-        btnTruck = CustomJButton.create(IGuiConsts.TRUCK);
+        btnTruck = CustomJButton.create(GuiConst.TRUCK);
         btnTruck.addActionListener(actionEvent -> DialogCaller
                 .showObjDialog(frame, DialogTruck.class));
 
-        btnMotorcycle = CustomJButton.create(IGuiConsts.MOTORCYCLE);
+        btnMotorcycle = CustomJButton.create(GuiConst.MOTORCYCLE);
         btnMotorcycle.addActionListener(actionEvent -> DialogCaller
                 .showObjDialog(frame, DialogMotorcycle.class));
 
-        btnDelete = CustomJButton.create(IGuiConsts.DELETE);
+        btnDelete = CustomJButton.create(GuiConst.DELETE);
         btnDelete.addActionListener(actionEvent -> {
             ThreadUtil.runInThread(() -> {
                 Thread.currentThread().setName("-> delete from storage");
@@ -169,11 +182,11 @@ public enum Gui {
     }
 
     private void createPanels() {
-        panelTable = CustomJPanel.create(PanelType.FRAME_TABLE_PANEL);
+        panelTable = CustomJPanel.create(PanelType.MAIN_FRAME_TABLE_PANEL);
         panelTable.add(dbLabel, BorderLayout.NORTH);
         panelTable.add(tableScrollPane, BorderLayout.CENTER);
 
-        panelButton = CustomJPanel.create(PanelType.FRAME_BUTTON_PANEL);
+        panelButton = CustomJPanel.create(PanelType.MAIN_FRAME_BUTTON_PANEL);
         panelButton.add(btnCar);
         panelButton.add(btnTruck);
         panelButton.add(btnMotorcycle);
@@ -183,16 +196,24 @@ public enum Gui {
     private void createMenu() {
         menuBar = new JMenuBar();
 
-        JMenuItem createOrOpenItem = createMenuItem(IGuiConsts.CREATE_OR_OPEN,
-                new CreateOrOpenActionListener(frame, dbLabel, LOG));
-        JMenuItem saveItem = createMenuItem(IGuiConsts.SAVE,
+        JMenuItem createOrOpenFileDatabaseItem = createMenuItem(
+                DbOperation.CREATE_OR_OPEN_FILE_DATABASE.getOperatioText(),
+                new CreateOrOpenFileDatabaseActionListener(frame, dbLabel, LOG));
+        JMenuItem connectToServerDatabaseItem = createMenuItem(
+                DbOperation.CONNECT_TO_SERVER_DATABASE.getOperatioText(),
+                new ConnectToServerDatabaseActionListener(frame, dbLabel, LOG));
+        JMenuItem saveItem = createMenuItem(
+                DbOperation.SAVE.getOperatioText(),
                 new SaveActionListener(frame, dbLabel, false, LOG));
-        JMenuItem saveAsItem = createMenuItem(IGuiConsts.SAVE_AS,
+        JMenuItem saveAsItem = createMenuItem(
+                DbOperation.SAVE_AS.getOperatioText(),
                 new SaveActionListener(frame, dbLabel, true, LOG));
         JMenu importItem = createImportExportDropdownMenu(true);
         JMenu exportItem = createImportExportDropdownMenu(false);
-        var fileMenu = new JMenu(IGuiConsts.FILE);
-        fileMenu.add(createOrOpenItem);
+        var fileMenu = new JMenu(GuiConst.FILE);
+        fileMenu.add(createOrOpenFileDatabaseItem);
+        fileMenu.add(new JSeparator());
+        fileMenu.add(connectToServerDatabaseItem);
         fileMenu.add(new JSeparator());
         fileMenu.add(saveItem);
         fileMenu.add(saveAsItem);
@@ -203,11 +224,11 @@ public enum Gui {
 
         menuBar.add(creatStyleMenu());
 
-        JMenuItem aboutItem = createMenuItem(IGuiConsts.ABOUT,
+        JMenuItem aboutItem = createMenuItem(GuiConst.ABOUT,
                 actionEvent -> JOptionPane.showMessageDialog(
-                        frame, IGuiConsts.ABOUT_TEXT.formatted(Main.appVersion),
-                        IGuiConsts.ABOUT_TITLE, JOptionPane.INFORMATION_MESSAGE));
-        var helpMenu = new JMenu(IGuiConsts.HELP);
+                        frame, GuiConst.ABOUT_TEXT.formatted(Main.appVersion),
+                        GuiConst.ABOUT_TITLE, JOptionPane.INFORMATION_MESSAGE));
+        var helpMenu = new JMenu(GuiConst.HELP);
         helpMenu.add(aboutItem);
         menuBar.add(helpMenu);
     }
@@ -219,7 +240,7 @@ public enum Gui {
     }
 
     private JMenu createImportExportDropdownMenu(boolean isImport) {
-        var dropdownMenu = new JMenu(isImport ? IGuiConsts.IMPORT_FROM : IGuiConsts.EXPORT_TO);
+        var dropdownMenu = new JMenu(isImport ? GuiConst.IMPORT_FROM : GuiConst.EXPORT_TO);
         for (DataFormat dataFormat : DataFormat.values()) {
             dropdownMenu.add(createMenuItem(dataFormat.getExtension(),
                     new ExportImportActionListener(dataFormat, isImport, frame, LOG)));
@@ -228,15 +249,20 @@ public enum Gui {
     }
 
     private JMenu creatStyleMenu() {
-        var styleMenu = new JMenu(IGuiConsts.STYLE);
+        var styleMenu = new JMenu(GuiConst.STYLE);
+
+        styleMenu.add(createCheckBoxResizeTblMenuItem());
+        styleMenu.add(new JSeparator());
+
         var checkBoxItems = new ArrayList<JCheckBoxMenuItem>();
         for (ColorSchema colorSchema : ColorSchema.values()) {
-            styleMenu.add(createCheckBoxMenuItem(colorSchema, checkBoxItems));
+            styleMenu.add(createCheckBoxColorSchemaMenuItem(colorSchema, checkBoxItems));
         }
+
         return styleMenu;
     }
 
-    private JCheckBoxMenuItem createCheckBoxMenuItem(ColorSchema colorSchema,
+    private JCheckBoxMenuItem createCheckBoxColorSchemaMenuItem(ColorSchema colorSchema,
             List<JCheckBoxMenuItem> checkBoxItems) {
         var checkBoxMenuItem = new JCheckBoxMenuItem(colorSchema.getNameForGui());
         checkBoxMenuItem.setSelected(
@@ -258,7 +284,7 @@ public enum Gui {
             var selectedItem = (JCheckBoxMenuItem) actionEvent.getSource();
             selectedItem.setSelected(true);
 
-            Settings.writeSetting(Setting.STYLE, selectedItem.getText().toLowerCase(Locale.ROOT));
+            Settings.saveStyle(selectedItem.getText().toLowerCase(Locale.ROOT));
 
             setStyle(Settings.getStyle());
             SwingUtilities.updateComponentTreeUI(frame);
@@ -268,24 +294,35 @@ public enum Gui {
         }
     }
 
+    private JCheckBoxMenuItem createCheckBoxResizeTblMenuItem() {
+        var checkBoxMenuItem = new JCheckBoxMenuItem(GuiConst.AUTO_RESIZE_TABLE_WIDTH);
+        checkBoxMenuItem.setSelected(Settings.isAutoResizeTableWidth());
+
+        checkBoxMenuItem.addActionListener(actionEvent -> {
+            try {
+                boolean isAutoResizeTableWidthCurrent = Settings.isAutoResizeTableWidth();
+                boolean isAutoResizeTableWidthNew = !isAutoResizeTableWidthCurrent;
+
+                Settings.saveAutoResizeTableWidth(isAutoResizeTableWidthNew);
+
+                checkBoxMenuItem.setSelected(isAutoResizeTableWidthNew);
+                table.setAutoResize(isAutoResizeTableWidthNew);
+
+                SwingUtilities.updateComponentTreeUI(frame);
+            } catch (Exception e) {
+                LogUtils.logAndShowError(LOG, frame,
+                        "Error while changing auto resizing mode of table.", "Style error", e);
+            }
+        });
+
+        return checkBoxMenuItem;
+    }
+
     private void createFrame() {
         frame = CustomJFrame.create(Main.appName);
         frame.setJMenuBar(menuBar);
         frame.getContentPane().add(panelTable, BorderLayout.CENTER);
         frame.getContentPane().add(panelButton, BorderLayout.EAST);
-        makeFrameVisible();
-    }
-
-    /**
-     * Creating and displaying a form. When launched via
-     * "SwingUtilities.invokeLater(new Runnable(){...}" the frame will be created
-     * and displayed after all expected events have been processed, i.e. the frame
-     * will be created and displayed when all resources are ready. This is
-     * necessary, so that all elements are guaranteed to be displayed in the window
-     * (if you do "frame.setVisible(true)" from the main thread, then there is a
-     * chance that some element will not be displayed in the window).
-     */
-    private void makeFrameVisible() {
-        SwingUtilities.invokeLater(() -> frame.setVisible(true));
+        frame.makeFrameVisible();
     }
 }

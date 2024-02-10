@@ -1,3 +1,18 @@
+/*******************************************************************************
+ * Copyright 2021-2024 Lenar Shamsutdinov
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *******************************************************************************/
 package home.file.csv;
 
 import java.io.File;
@@ -61,7 +76,7 @@ public final class CsvImporter implements IImporter {
 
     private void checkElementsCountInRawDataObjs(List<String[]> rawDataObjs) {
         for (String[] rawDataObj : rawDataObjs) {
-            if (ICsvConsts.CSV_ROW_SIZE != rawDataObj.length) {
+            if (CsvConst.CSV_ROW_SIZE != rawDataObj.length) {
                 throw new IllegalArgumentException("Incorrect count of elements in : [%s]"
                         .formatted(String.join(", ", rawDataObj)));
             }
@@ -70,17 +85,14 @@ public final class CsvImporter implements IImporter {
 
     private List<String[]> getRawDataObjsWithoutHeader(List<String[]> rawDataObjs) {
         String[] header = rawDataObjs.get(0);
-        return Arrays.equals(header, ICsvConsts.CSV_HEADER)
+        return Arrays.equals(header, CsvConst.CSV_HEADER)
                 ? rawDataObjs.subList(1, rawDataObjs.size())
                 : rawDataObjs;
     }
 
     private AbstractVehicle convertToDataObj(String[] rawDataObj) {
-        String type = rawDataObj[ICsvConsts.TYPE_IDX];
+        String type = rawDataObj[CsvConst.TYPE_IDX];
         VehicleType vehicleType = VehicleType.getVehicleType(type);
-        if (vehicleType == null) {
-            throw new IllegalArgumentException("Wrong vehicle type received : " + type);
-        }
 
         AbstractVehicle dataObj = switch (vehicleType) {
             case CAR -> new Car();
@@ -88,31 +100,31 @@ public final class CsvImporter implements IImporter {
             case MOTORCYCLE -> new Motorcycle();
         };
 
-        for (int tagIdx = ICsvConsts.COLOR_IDX; ICsvConsts.HAS_CRADLE_IDX >= tagIdx; tagIdx++) {
+        for (int tagIdx = CsvConst.COLOR_IDX; CsvConst.HAS_CRADLE_IDX >= tagIdx; tagIdx++) {
             String value = rawDataObj[tagIdx];
             switch (tagIdx) {
-                case ICsvConsts.COLOR_IDX -> dataObj.setColor(value);
-                case ICsvConsts.NUMBER_IDX -> dataObj.setNumber(value);
-                case ICsvConsts.DATE_IDX -> dataObj.setDateTime(Utils.getLongFromFormattedDate(value));
-                case ICsvConsts.HAS_TRAILER_IDX -> {
+                case CsvConst.COLOR_IDX -> dataObj.setColor(value);
+                case CsvConst.NUMBER_IDX -> dataObj.setNumber(value);
+                case CsvConst.DATE_IDX -> dataObj.setDateTime(Utils.getLongFromFormattedDate(value));
+                case CsvConst.HAS_TRAILER_IDX -> {
                     if (vehicleType.in(VehicleType.CAR, VehicleType.TRUCK)) {
                         boolean hasTrailer = Boolean.parseBoolean(value);
                         ((AbstractVehicleWithTrailer) dataObj).setHasTrailer(hasTrailer);
                     }
                 }
-                case ICsvConsts.IS_TRANSPORTS_PASSENGERS_IDX -> {
+                case CsvConst.IS_TRANSPORTS_PASSENGERS_IDX -> {
                     if (VehicleType.CAR == vehicleType) {
                         boolean isTransportsPassengers = Boolean.parseBoolean(value);
                         ((Car) dataObj).setTransportsPassengers(isTransportsPassengers);
                     }
                 }
-                case ICsvConsts.IS_TRANSPORTS_CARGO_IDX -> {
+                case CsvConst.IS_TRANSPORTS_CARGO_IDX -> {
                     if (VehicleType.TRUCK == vehicleType) {
                         boolean isTransportsCargo = Boolean.parseBoolean(value);
                         ((Truck) dataObj).setTransportsCargo(isTransportsCargo);
                     }
                 }
-                case ICsvConsts.HAS_CRADLE_IDX -> {
+                case CsvConst.HAS_CRADLE_IDX -> {
                     if (VehicleType.MOTORCYCLE == vehicleType) {
                         boolean hasCradle = Boolean.parseBoolean(value);
                         ((Motorcycle) dataObj).setHasCradle(hasCradle);

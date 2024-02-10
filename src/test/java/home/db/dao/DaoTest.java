@@ -1,3 +1,18 @@
+/*******************************************************************************
+ * Copyright 2021-2024 Lenar Shamsutdinov
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *******************************************************************************/
 package home.db.dao;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
@@ -6,23 +21,15 @@ import static org.junit.jupiter.api.Assertions.fail;
 
 import java.sql.SQLException;
 
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-final class AbstractDaoTest {
+final class DaoTest {
 
-    private static final Logger LOG = LoggerFactory.getLogger(AbstractDaoTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(DaoTest.class);
     private static final String userMsg = "MY_MESSAGE";
-
-    private static DaoSQLite daoSQLite;
-
-    @BeforeAll
-    static void init() {
-        daoSQLite = (DaoSQLite) DaoSQLite.getInstance();
-    }
 
     @ParameterizedTest(name = "[{0}] : {2}")
     @CsvSource(delimiter = ';', value = {
@@ -30,10 +37,10 @@ final class AbstractDaoTest {
             "correct_execution; 1, 0, 3, -2, 4; Check results of correct batch execution.",
             "null_arg         ;               ; Check work with null args result.",
     })
-    void existingType(String testName, String strBatchResults, String description)
+    void checkBatchSuccessTest(String testName, String strBatchResults, String description)
             throws SQLException {
         int[] intBatchResults = convertToIntArray(strBatchResults);
-        assertDoesNotThrow(() -> daoSQLite.checkBatchExecution(intBatchResults, userMsg, LOG));
+        assertDoesNotThrow(() -> new SQLiteDao().checkBatchExecution(intBatchResults, userMsg, LOG));
     }
 
     @ParameterizedTest(name = "[{0}]: {2}")
@@ -45,15 +52,15 @@ final class AbstractDaoTest {
     void checkBatchFailTest(String testName, String strBatchResults, String erroMsg) {
         try {
             int[] intBatchResults = convertToIntArray(strBatchResults);
-            daoSQLite.checkBatchExecution(intBatchResults, userMsg, LOG);
+            new SQLiteDao().checkBatchExecution(intBatchResults, userMsg, LOG);
             fail("Expected java.sql.SQLException to be thrown, but nothing was thrown.");
         } catch (SQLException e) {
             String actual = e.getMessage().strip();
             assertTrue(actual.endsWith(erroMsg), """
                     Expected and actual error message does not match:
+                    expected: %s
                     actual: %s
-                    expected : %s
-                    """.formatted(actual, erroMsg));
+                    """.formatted(erroMsg, actual));
         }
     }
 
