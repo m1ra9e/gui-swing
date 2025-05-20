@@ -2,7 +2,7 @@
 
 # Gui-swing
 
-GUI application for working with the vehicle database and the ability to import and export data to files.
+Demo GUI application for working with the vehicle database and the ability to import and export data to files.
 
 * Supported databases: SQLite, PostgreSQL.
 
@@ -32,19 +32,22 @@ For run tests, execute [test.bat](tools/test.bat) on Windows or [test.sh](tools/
 
 [Changelog information](CHANGELOG.md)
 
+<details>
+  <summary>Short version description</summary>
 
-### Short version description
+  | version | description                                                                                                                                |
+  | ------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+  | 6.0.0   | added PostgreSQL, removed choose data store on start, date and sorting in properties-file, added tools-scripts, refactoring, added license |
+  | 5.0.0   | java_17, import and export                                                                                                                 |
+  | 4.0.0   | improve and refactoring                                                                                                                    |
+  | 3.0.0   | save data after push button                                                                                                                |
+  | 2.0.0   | db chooser                                                                                                                                 |
+  | 1.0.0   | work with one internal db                                                                                                                  |
 
-| version | description |
-| ------- | ----------- |
-| 6.0.0 | added PostgreSQL, removed choose data store on start, date and sorting in properties-file, added tools-scripts, refactoring, added license |
-| 5.0.0 | java_17, import and export |
-| 4.0.0 | improve and refactoring |
-| 3.0.0 | save data after push button |
-| 2.0.0 | db chooser |
-| 1.0.0 | work with one internal db |
+</details>
 
 ## Plans
 
 - fix bugs
 - add new functions
+- refactoring

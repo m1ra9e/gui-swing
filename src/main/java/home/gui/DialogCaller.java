@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2021-2024 Lenar Shamsutdinov
+ * Copyright 2021-2025 Lenar Shamsutdinov
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,6 +37,11 @@ final class DialogCaller {
 
     private static final int OBJ_DIALOG_WIDTH = 450;
     private static final int OBJ_DIALOG_HEIGHT = 350;
+
+    //// in the 'main' part of this project, reflection is used only for
+    //// demonstration, in prod-projects I use reflection only in 'test' part
+    //// (in the 'main' part of prod-projects, I use reflection only if the logic of
+    //// the library or framework I'm using requires it)
 
     @SuppressWarnings("unchecked")
     static <T extends AbstractDialogVehicle> void showObjDialog(JFrame frame,

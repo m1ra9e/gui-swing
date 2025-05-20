@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2021-2024 Lenar Shamsutdinov
+ * Copyright 2021-2025 Lenar Shamsutdinov
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,7 +22,7 @@ public enum DbOperation {
     SAVE(GuiConst.SAVE),
     SAVE_AS(GuiConst.SAVE_AS);
 
-    private String operationText;
+    private final String operationText;
 
     private DbOperation(String operationText) {
         this.operationText = operationText;
