@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2021-2025 Lenar Shamsutdinov
+ * Copyright 2021-2026 Lenar Shamsutdinov
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,7 +29,7 @@ import javax.swing.WindowConstants;
 
 @SuppressWarnings("serial")
 abstract sealed class AbstractCustomJDialog
-        extends JDialog permits AbstractDialogVehicle, DialogDbConnection {
+extends JDialog permits AbstractDialogVehicle, DialogDbConnection {
 
     private static final int GAP_BETWEEN_COMPONENTS = 2;
 
@@ -61,16 +61,16 @@ abstract sealed class AbstractCustomJDialog
 
     private void addHotKeyForClose() {
         getRootPane().getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW)
-                .put(KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), CLOSE_DIALOG_ACTION);
+        .put(KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), CLOSE_DIALOG_ACTION);
 
         getRootPane().getActionMap()
-                .put(CLOSE_DIALOG_ACTION, new AbstractAction() {
+        .put(CLOSE_DIALOG_ACTION, new AbstractAction() {
 
-                    @Override
-                    public void actionPerformed(ActionEvent e) {
-                        actionOnHotKeyForClose();
-                    }
-                });
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                actionOnHotKeyForClose();
+            }
+        });
     }
 
     protected void actionOnHotKeyForClose() {

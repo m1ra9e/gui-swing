@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2021-2025 Lenar Shamsutdinov
+ * Copyright 2021-2026 Lenar Shamsutdinov
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -38,7 +38,7 @@ public final class LogUtils {
 
         var sb = new StringBuilder();
         sb.append(threadName).append("\n").append(msg)
-                .append("\n\nDescription.\n").append(t.getMessage());
+        .append("\n\nDescription.\n").append(t.getMessage());
 
         if (Files.exists(LOG_FILE)) {
             sb.append("\n\nLog file:\n").append(LOG_FILE.toAbsolutePath().toString());

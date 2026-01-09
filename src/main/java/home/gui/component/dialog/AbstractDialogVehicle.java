@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2021-2025 Lenar Shamsutdinov
+ * Copyright 2021-2026 Lenar Shamsutdinov
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -38,7 +38,7 @@ import home.model.AbstractVehicle;
 
 @SuppressWarnings("serial")
 public abstract sealed class AbstractDialogVehicle
-        extends AbstractCustomJDialog permits AbstractDialogTrailer, DialogMotorcycle {
+extends AbstractCustomJDialog permits AbstractDialogTrailer, DialogMotorcycle {
 
     private static final int TEXT_FIELD_COLUMN_NUMBERS = 9;
 

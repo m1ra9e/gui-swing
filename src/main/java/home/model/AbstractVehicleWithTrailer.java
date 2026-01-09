@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2021-2025 Lenar Shamsutdinov
+ * Copyright 2021-2026 Lenar Shamsutdinov
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,7 +18,7 @@ package home.model;
 import java.util.Objects;
 
 public abstract sealed class AbstractVehicleWithTrailer
-        extends AbstractVehicle permits Car, Truck {
+extends AbstractVehicle permits Car, Truck {
 
     private static final long serialVersionUID = 5771617467340614253L;
 

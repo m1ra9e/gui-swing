@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2021-2025 Lenar Shamsutdinov
+ * Copyright 2021-2026 Lenar Shamsutdinov
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,7 +29,7 @@ import home.model.VehicleType;
 import home.utils.Utils;
 
 abstract sealed class AbstractJsonYamlExporter
-        implements IExporter permits JsonExporter, YamlExporter {
+implements IExporter permits JsonExporter, YamlExporter {
 
     protected Map<String, String> convertDataObjToMap(AbstractVehicle dataObj) {
         var map = new LinkedHashMap<String, String>();

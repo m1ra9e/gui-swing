@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2021-2025 Lenar Shamsutdinov
+ * Copyright 2021-2026 Lenar Shamsutdinov
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -91,7 +91,7 @@ public final class ThreadUtil {
                     LOG.info("Executor did not terminate in the specified time.");
                     List<Runnable> droppedTasks = EXECUTOR.shutdownNow();
                     LOG.info("Executor was abruptly shut down. " + droppedTasks.size()
-                            + " tasks will not be executed.");
+                    + " tasks will not be executed.");
                 }
             } catch (InterruptedException e) {
                 LogUtils.logAndShowError(LOG, null, "Interrupted the operation of stopping tasks.",

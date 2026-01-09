@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2021-2025 Lenar Shamsutdinov
+ * Copyright 2021-2026 Lenar Shamsutdinov
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -139,6 +139,6 @@ public final class CustomJFileChooserImpExp extends JFileChooser {
         String extensionWithDot = '.' + extension;
         return file.getName().endsWith(extensionWithDot)
                 ? file
-                : new File(file.getAbsolutePath() + extensionWithDot);
+                        : new File(file.getAbsolutePath() + extensionWithDot);
     }
 }

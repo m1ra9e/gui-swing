@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2021-2025 Lenar Shamsutdinov
+ * Copyright 2021-2026 Lenar Shamsutdinov
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -65,7 +65,7 @@ final class DbAvailabilityChecker implements ExecutionCondition {
             if (currentDbType == DbType.getDbType(dbTypeFromAnnotationStr)) {
                 return isDbAvailableForWork(currentDbType)
                         ? ConditionEvaluationResult.enabled("%s is available for work!".formatted(currentDbType))
-                        : ConditionEvaluationResult.disabled("%s is not available for work!".formatted(currentDbType));
+                                : ConditionEvaluationResult.disabled("%s is not available for work!".formatted(currentDbType));
             }
         }
 

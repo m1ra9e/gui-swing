@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2021-2025 Lenar Shamsutdinov
+ * Copyright 2021-2026 Lenar Shamsutdinov
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -295,7 +295,7 @@ abstract sealed class AbstractDao implements IDao permits PgDao, SQLiteDao {
 
             var msg = new StringBuilder();
             msg.append("Batch execution error:\n").append(errorMsg)
-                    .append("\n").append("When executing the batch, ");
+            .append("\n").append("When executing the batch, ");
 
             if (Statement.EXECUTE_FAILED == batchResult) {
                 msg.append("result code 'EXECUTE_FAILED' was received.");
@@ -303,7 +303,7 @@ abstract sealed class AbstractDao implements IDao permits PgDao, SQLiteDao {
             }
 
             msg.append("unknown result code '")
-                    .append(batchResult).append("' was received.");
+            .append(batchResult).append("' was received.");
             throw LogUtils.logAndCreateSqlException(msg.toString(), log);
         }
     }
@@ -328,7 +328,7 @@ abstract sealed class AbstractDao implements IDao permits PgDao, SQLiteDao {
 
     private void sqlOperationOneByOne(Connection conn, String sql,
             List<AbstractVehicle> dataObjs, boolean isUpdateOperation, String errorMsg)
-            throws SQLException {
+                    throws SQLException {
         String operationType = isUpdateOperation ? "update" : "insert";
 
         Exception mainExeption = null;
@@ -349,7 +349,7 @@ abstract sealed class AbstractDao implements IDao permits PgDao, SQLiteDao {
         if (!errorsWithDataObjs.isEmpty()) {
             var sb = new StringBuilder();
             sb.append(errorMsg).append(" Can't ").append(operationType)
-                    .append(":\n").append(String.join("\n", errorsWithDataObjs));
+            .append(":\n").append(String.join("\n", errorsWithDataObjs));
 
             throw LogUtils.logAndCreateSqlException(sb.toString(), LOG, mainExeption);
         }
@@ -448,8 +448,8 @@ abstract sealed class AbstractDao implements IDao permits PgDao, SQLiteDao {
         if (!errorsWithIds.isEmpty()) {
             var sb = new StringBuilder();
             sb.append("Information has not been deleted from the database.")
-                    .append("\nCan't delete objects with ids:\n")
-                    .append(String.join("\n", errorsWithIds));
+            .append("\nCan't delete objects with ids:\n")
+            .append(String.join("\n", errorsWithIds));
 
             throw LogUtils.logAndCreateSqlException(sb.toString(), LOG, mainExeption);
         }
