@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2021-2025 Lenar Shamsutdinov
+ * Copyright 2021-2026 Lenar Shamsutdinov
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -87,7 +87,7 @@ public final class CsvImporter implements IImporter {
         String[] header = rawDataObjs.get(0);
         return Arrays.equals(header, CsvConst.CSV_HEADER)
                 ? rawDataObjs.subList(1, rawDataObjs.size())
-                : rawDataObjs;
+                        : rawDataObjs;
     }
 
     private AbstractVehicle convertToDataObj(String[] rawDataObj) {

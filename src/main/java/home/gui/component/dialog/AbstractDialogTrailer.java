@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2021-2025 Lenar Shamsutdinov
+ * Copyright 2021-2026 Lenar Shamsutdinov
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,7 +23,7 @@ import home.model.AbstractVehicleWithTrailer;
 
 @SuppressWarnings("serial")
 abstract sealed class AbstractDialogTrailer
-        extends AbstractDialogVehicle permits DialogCar, DialogTruck {
+extends AbstractDialogVehicle permits DialogCar, DialogTruck {
 
     private JCheckBox chkHasTrailer;
 
@@ -52,6 +52,6 @@ abstract sealed class AbstractDialogTrailer
     protected void fillDataObj() {
         super.fillDataObj();
         ((AbstractVehicleWithTrailer) dataObj)
-                .setHasTrailer(chkHasTrailer.isSelected());
+        .setHasTrailer(chkHasTrailer.isSelected());
     }
 }

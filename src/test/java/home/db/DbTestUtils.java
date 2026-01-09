@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2021-2025 Lenar Shamsutdinov
+ * Copyright 2021-2026 Lenar Shamsutdinov
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -56,16 +56,16 @@ final class DbTestUtils {
     static void truncate(String tableName, DbType dbType) throws SQLException, InterruptedException {
         switch (dbType) {
             case SQLite ->
-                    // SQLite doesn't have TRUNCATE, instead it uses DELETE without WHERE.
-                    // In SQLite, to reset autoincrement, its entry is removed from the
-                    // sqlite_sequence table.
-                    execute("DELETE FROM %s".formatted(tableName),
-                            "DELETE FROM sqlite_sequence WHERE name='%s'".formatted(tableName));
+            // SQLite doesn't have TRUNCATE, instead it uses DELETE without WHERE.
+            // In SQLite, to reset autoincrement, its entry is removed from the
+            // sqlite_sequence table.
+            execute("DELETE FROM %s".formatted(tableName),
+                    "DELETE FROM sqlite_sequence WHERE name='%s'".formatted(tableName));
             case PostgreSQL ->
-                    // The application logic uses the sequence name, which is usually
-                    // the default in PostgreSQL: public.{tableName}_id_seq.
-                    execute("TRUNCATE %s".formatted(tableName),
-                            "ALTER SEQUENCE %s_id_seq RESTART WITH 1".formatted(tableName));
+            // The application logic uses the sequence name, which is usually
+            // the default in PostgreSQL: public.{tableName}_id_seq.
+            execute("TRUNCATE %s".formatted(tableName),
+                    "ALTER SEQUENCE %s_id_seq RESTART WITH 1".formatted(tableName));
             default -> throw new SQLException("Unsupported database type : " + dbType);
         }
     }

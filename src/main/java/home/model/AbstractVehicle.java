@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2021-2025 Lenar Shamsutdinov
+ * Copyright 2021-2026 Lenar Shamsutdinov
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,7 +22,7 @@ import java.util.Objects;
 import java.util.TimeZone;
 
 public abstract sealed class AbstractVehicle
-        implements Serializable permits AbstractVehicleWithTrailer, Motorcycle {
+implements Serializable permits AbstractVehicleWithTrailer, Motorcycle {
 
     private static final long serialVersionUID = 4228103618146673801L;
 
@@ -122,7 +122,7 @@ public abstract sealed class AbstractVehicle
             sb.append(SPACE).append("[id=").append(id).append(']');
         }
         sb.append(SPACE).append(':').append(SPACE).append(color).append(SPACE).append(type)
-                .append(SPACE).append("with number").append(SPACE).append(number);
+        .append(SPACE).append("with number").append(SPACE).append(number);
 
         LocalDateTime time = LocalDateTime.ofInstant(Instant.ofEpochMilli(dateTime),
                 TimeZone.getDefault().toZoneId());

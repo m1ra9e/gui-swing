@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2021-2025 Lenar Shamsutdinov
+ * Copyright 2021-2026 Lenar Shamsutdinov
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,7 +23,7 @@ import home.file.IImporter;
 import home.model.AbstractVehicle;
 
 abstract sealed class AbstractSerImporter
-        implements IImporter permits BserImporter, SerImporter {
+implements IImporter permits BserImporter, SerImporter {
 
     protected List<AbstractVehicle> readDataObjs(ObjectInputStream objInputStream)
             throws ClassNotFoundException, IOException {
